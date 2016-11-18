@@ -1,7 +1,7 @@
 Zclassic 1.0.2
 ==============
 
-What is Zclassic
+What is Zclassic?
 ----------------
 Zclassic is a Zcash fork with no 20% Founders Tax.
 
@@ -25,19 +25,19 @@ Install
 ```
 
 
-What is Zcash?
+About
 --------------
 
-[Zcash](https://z.cash/) is an implementation of the "Zerocash" protocol.
+[Zclassic]http://zclassic.org/), like [Zcash](https://z.cash/), is an implementation of the "Zerocash" protocol.
 Based on Bitcoin's code, it intends to offer a far higher standard of privacy
 through a sophisticated zero-knowledge proving scheme that preserves
 confidentiality of transaction metadata. Technical details are available
-in our [Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
+in the Zcash [Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
 
-This software is the Zcash client. It downloads and stores the entire history
-of Zcash transactions; depending on the speed of your computer and network
+This software is the Zclassic client. It downloads and stores the entire history
+of Zclassic transactions; depending on the speed of your computer and network
 connection, the synchronization process could take a day or more once the
-block chain has reached a significant size.
+blockchain has reached a significant size.
 
 Security Warnings
 -----------------
