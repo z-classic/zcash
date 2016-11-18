@@ -58,6 +58,12 @@ https://github.com/z-classic/zclassic/wiki/1.0-User-Guide
   for help and more information.
 * Ask for help on the [Zclassic](http://zcltalk.tech/index.php) forum.
 
+### Want to participate in development?
+
+* Code review is welcome! 
+* If you want to get to know us join our slack: http://zclassic.herokuapp.com/
+
+
 Participation in the Zcash project is subject to a
 [Code of Conduct](code_of_conduct.md).
 
