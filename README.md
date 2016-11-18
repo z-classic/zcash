@@ -1,4 +1,4 @@
-Zclassic 1.0.1
+Zclassic 1.0.2
 ==============
 
 What is Zclassic
@@ -45,18 +45,18 @@ Security Warnings
 See important security warnings in
 [doc/security-warnings.md](doc/security-warnings.md).
 
-**Zcash is unfinished and highly experimental.** Use at your own risk.
+**Zclassic and Zcash are unfinished and highly experimental.** Use at your own risk.
 
 Where do I begin?
 -----------------
-We have a guide for joining the main Zcash network:
-https://github.com/zcash/zcash/wiki/1.0-User-Guide
+We have a guide for joining the main Zclassic network:
+https://github.com/z-classic/zclassic/wiki/1.0-User-Guide
 
 ### Need Help?
 
-* See the documentation at the [Zcash Wiki](https://github.com/zcash/zcash/wiki)
+* See the documentation at the [Zclassic Wiki](https://github.com/z-classic/zclassic/wiki)
   for help and more information.
-* Ask for help on the [Zcash](https://forum.z.cash/) forum.
+* Ask for help on the [Zclassic](http://zcltalk.tech/index.php) forum.
 
 Participation in the Zcash project is subject to a
 [Code of Conduct](code_of_conduct.md).
