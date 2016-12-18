@@ -254,8 +254,8 @@ BOOST_AUTO_TEST_CASE(rpc_wallet)
     BOOST_CHECK_THROW(CallRPC("getblocksubsidy -1"), runtime_error);
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getblocksubsidy 50000"));
     Object obj = retValue.get_obj();
-    BOOST_CHECK(find_value(obj, "miner") == 10.0);
-    BOOST_CHECK(find_value(obj, "founders") == 2.5);
+    BOOST_CHECK(find_value(obj, "miner") == 12.5);
+    BOOST_CHECK(find_value(obj, "founders") == 0.0);
     BOOST_CHECK_NO_THROW(retValue = CallRPC("getblocksubsidy 1000000"));
     obj = retValue.get_obj();
     BOOST_CHECK(find_value(obj, "miner") == 6.25);
