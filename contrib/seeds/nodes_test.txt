@@ -1,6 +1,4 @@
 # List of fixed seed nodes for testnet
-104.207.149.241:18233
-149.56.101.252:18233
 
 # Onion nodes
 mnsj6hmvtvdwx4xu.onion:18233
