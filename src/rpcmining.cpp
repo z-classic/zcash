@@ -815,7 +815,7 @@ Value getblocksubsidy(const Array& params, bool fHelp)
     CAmount nReward = GetBlockSubsidy(nHeight, Params().GetConsensus());
     CAmount nFoundersReward = 0;
     if ((nHeight > 0) && (nHeight <= Params().GetConsensus().GetLastFoundersRewardBlockHeight())) {
-        nFoundersReward = nReward/5;
+        nFoundersReward = 0;
         nReward -= nFoundersReward;
     }
     Object result;
