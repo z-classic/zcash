@@ -2,12 +2,16 @@
 
 set -eu
 
-PARAMS_DIR="$HOME/Library/Application Support/ZcashParams"
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    PARAMS_DIR="$HOME/Library/Application Support/ZcashParams"
+else
+    PARAMS_DIR="$HOME/.zcash-params"
+fi
 
 SPROUT_PKEY_NAME='sprout-proving.key'
 SPROUT_VKEY_NAME='sprout-verifying.key'
-SPROUT_PKEY_URL="https://zcash.dl.mercerweiss.com/$SPROUT_PKEY_NAME"
-SPROUT_VKEY_URL="https://zcash.dl.mercerweiss.com/$SPROUT_VKEY_NAME"
+SPROUT_PKEY_URL="https://z.cash/downloads/$SPROUT_PKEY_NAME"
+SPROUT_VKEY_URL="https://z.cash/downloads/$SPROUT_VKEY_NAME"
 
 SHA256CMD="$(command -v sha256sum || echo shasum)"
 SHA256ARGS="$(command -v sha256sum >/dev/null || echo '-a 256')"
@@ -18,13 +22,21 @@ function fetch_params {
     local dlname="${output}.dl"
     local expectedhash="$3"
 
-    if ! [ -f "$output" ]
-    then
+    if ! [ -f "$output" ]; then
         echo "Retrieving: $url"
-        curl \
-            --output "$dlname" \
-            -# -L -C - \
-            "$url"
+        if [ $(sw_vers -productName) == "Mac" ]; then
+            curl \
+                --output "$dlname" \
+                -# -L -C - \
+                "$url"
+        else
+            wget \
+                --progress=dot:giga \
+                --output-document="$dlname" \
+                --continue \
+                --retry-connrefused --waitretry=3 --timeout=30 \
+                "$url"
+        fi
 
         "$SHA256CMD" $SHA256ARGS --check <<EOF
 $expectedhash  $dlname
