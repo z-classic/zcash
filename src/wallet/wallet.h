@@ -162,7 +162,7 @@ public:
     // Index into CTransaction.vjoinsplit
     #ifdef __LP64__ // required to build on MacOS due to size_t ambiguity errors
     uint64_t js;
-    #elif
+    #else
     size_t js;
     #endif
     // Index into JSDescription fields of length ZC_NUM_JS_OUTPUTS

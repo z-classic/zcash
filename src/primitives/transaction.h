@@ -89,7 +89,7 @@ public:
             #ifdef __LP64__ // required to build on MacOS due to size_t ambiguity errors
             boost::array<uint64_t, ZC_NUM_JS_INPUTS>& inputMap,
             boost::array<uint64_t, ZC_NUM_JS_OUTPUTS>& outputMap,
-            #elif
+            #else
             boost::array<size_t, ZC_NUM_JS_INPUTS>& inputMap,
             boost::array<size_t, ZC_NUM_JS_OUTPUTS>& outputMap,
             #endif
