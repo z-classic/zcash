@@ -17,7 +17,7 @@ endif
 
 ifeq ($(uname_S), Darwin)
   define $(package)_build_cmds
-    $(MAKE) -C make GTEST_DIR='$(host_prefix)' CXXFLAGS='-fPIC -fvisibility=hidden' gmock-all.o
+    $(MAKE) -C make GTEST_DIR='$(host_prefix)' CXXFLAGS='-fPIC' gmock-all.o
   endef
 
   define $(package)_stage_cmds

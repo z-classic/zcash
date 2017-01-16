@@ -12,11 +12,11 @@ else
     uname_S := $(shell uname -s)
 endif
 
-define $(package)_build_cmds
-  $(MAKE) -C make CXXFLAGS="-fPIC -fvisibility=hidden" gtest.a
-endef
-
 ifeq ($(uname_S), Darwin)
+  define $(package)_build_cmds
+    $(MAKE) -C make CXXFLAGS=-fPIC gtest.a
+  endef
+
   define $(package)_stage_cmds
     ginstall -D ./make/gtest.a $($(package)_staging_dir)$(host_prefix)/lib/libgtest.a && \
     cp -a ./include $($(package)_staging_dir)$(host_prefix)/include
