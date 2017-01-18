@@ -14,7 +14,7 @@
 
 #include "crypto/equihash.h"
 #include "util.h"
-#ifdef __LP64__ // required to build on MacOS due to size_t ambiguity errors
+#ifdef defined(__LP64__) || defined(WIN32) || defined(_WIN32) // required to build on MacOS due to size_t ambiguity errors
 #include "compat/endian.h"
 #endif
 #include <algorithm>
