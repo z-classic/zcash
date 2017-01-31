@@ -3,8 +3,8 @@ $(package)_download_path=https://github.com/z-classic/$(package)/archive/
 $(package)_file_name=$(package)-$($(package)_git_commit).tar.gz
 $(package)_download_file=$($(package)_git_commit).tar.gz
 
-$(package)_sha256_hash=e6f39ad24efb50892704850d204c5330c5fc5125e7e9c2cf808050fe6a6c4148
-$(package)_git_commit=dd36881e238b95123ac720eea4b3a6c5a3907c01
+$(package)_sha256_hash=9eb2da0665312d0e106f5d052977b8929efd57c71fe271e5cb32a2082dafefb7
+$(package)_git_commit=e36aa9fb0bd2701dc0e1d7029c151ef882e904ec
 
 define $(package)_set_vars
     $(package)_build_env=CC="$($(package)_cc)" CXX="$($(package)_cxx)"
