@@ -7,9 +7,14 @@ $(package)_sha256_hash=f73a6546fdf9fce9ff93a5015e0333a8af3062a152a9ad6bcb772c966
 
 define $(package)_set_vars
     $(package)_build_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)" CXX="$($(package)_cxx)" CXXFLAGS="$($(package)_cxxflags)"
-    $(package)_install=install
-    $(package)_darwin_install=ginstall
 endef
+
+BUILD_OS := $(shell uname)
+ifeq ($(BUILD_OS),Darwin)
+    $(package)_install=ginstall
+else
+    $(package)_install=install
+endif
 
 define $(package)_build_cmds
     $(MAKE) -C make gtest.a

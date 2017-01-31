@@ -16,8 +16,8 @@ define $(package)_config_cmds
 endef
 
 define $(package)_preprocess_cmds
-   sed -i "s/WinIoCtl.h/winioctl.h/g" src/dbinc/win_db.h
- endef
+   sed -i "" -e "s/WinIoCtl.h/winioctl.h/g" src/dbinc/win_db.h
+endef
 
 define $(package)_build_cmds
   $(MAKE) libdb_cxx-6.2.a libdb-6.2.a
