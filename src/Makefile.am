@@ -465,29 +465,15 @@ libzcashconsensus_la_SOURCES = \
   script/interpreter.cpp \
   script/script.cpp \
   uint256.cpp \
-  utilstrencodings.cpp \
-  util.cpp \
-  chainparamsbase.cpp \
-  utiltime.cpp \
-  random.cpp \
-  support/cleanse.cpp \
-  zcash/JoinSplit.cpp \
-  zcash/prf.cpp \
-  zcash/Note.cpp \
-  zcash/NoteEncryption.cpp \
-  zcash/util.cpp \
-  zcash/Address.cpp \
-  zcash/IncrementalMerkleTree.cpp \
-  zcash/Proof.cpp
-
+  utilstrencodings.cpp
 
 if GLIBC_BACK_COMPAT
   libzcashconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
 libzcashconsensus_la_LDFLAGS = -no-undefined $(RELDFLAGS)
-libzcashconsensus_la_LIBADD = -lgmp -lgomp -lsnark -lsodium $(CRYPTO_LIBS) $(BOOST_LIBS) -lpthread
-libzcashconsensus_la_CPPFLAGS = -fopenmp -std=c++11 $(CRYPTO_CFLAGS) -I$(builddir)/obj  -DPTW32_STATIC_LIB -DBUILD_BITCOIN_INTERNAL -DCURVE_ALT_BN128 -pthread
+libzcashconsensus_la_LIBADD = $(CRYPTO_LIBS)
+libzcashconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_BITCOIN_INTERNAL
 
 endif
 #
