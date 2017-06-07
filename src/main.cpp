@@ -675,7 +675,14 @@ bool IsStandardTx(const CTransaction& tx, string& reason)
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
+        int nHeight = chainActive.Height();
+        // provide temporary replay protection for two minerconf windows during chainsplit
+        if ((whichType != TX_PUBKEY_REPLAY && whichType != TX_PUBKEYHASH_REPLAY && whichType != TX_MULTISIG_REPLAY) &&
+             !tx.IsCoinBase()) {
+            reason = "op-checkblockatheight-needed";
+            return false;
+        }
+        else if (whichType == TX_NULL_DATA)
             nDataOut++;
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
@@ -2136,8 +2143,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    // Start enforcing OP_CHECKBLOCKATHEIGHT rules using versionbits logic.
-    if (VersionBitsState(pindex->pprev, chainparams.GetConsensus(), Consensus::DEPLOYMENT_CBAH, versionbitscache) == THRESHOLD_ACTIVE) {
+    // Start enforcing OP_CHECKBLOCKATHEIGHT rules for block.nVersion=4
+    if (block.nVersion >= 4) {
         flags |= SCRIPT_VERIFY_CHECKBLOCKATHEIGHT;
     }
 
