@@ -2338,6 +2338,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"generated\" : true|false  (boolean) true if txout is a coinbase transaction output\n"
             "    \"address\" : \"address\",  (string) the zcash address\n"
+            "    \"generated\" : true|false  (boolean) true if txout is a coinbase transaction output\n"
             "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\", (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
