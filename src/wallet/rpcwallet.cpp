@@ -2911,6 +2911,10 @@ UniValue zc_raw_keygen(const UniValue& params, bool fHelp)
     auto addr = k.address();
     auto viewing_key = k.viewing_key();
 
+    CDataStream viewing(SER_NETWORK, PROTOCOL_VERSION);
+
+    viewing << viewing_key;
+
     CZCPaymentAddress pubaddr(addr);
     CZCSpendingKey spendingkey(k);
     CZCViewingKey viewingkey(viewing_key);
