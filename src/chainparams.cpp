@@ -80,8 +80,7 @@ public:
         txNew.vout.resize(1);
         txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
         txNew.vout[0].nValue = 0;
-        txNew.vout[0].scriptPubKey = CScript() << ParseHex("0409d56fed17c99b6b4e9ce56958ec1a0c301cc2be4113e02117c2d4b586563470fcf4e43b0d57ae195e7a2337169b4b4cf426544355cf5d6891d85b279e0ed0d3
-") << OP_CHECKSIG;
+        txNew.vout[0].scriptPubKey = CScript() << ParseHex("0409d56fed17c99b6b4e9ce56958ec1a0c301cc2be4113e02117c2d4b586563470fcf4e43b0d57ae195e7a2337169b4b4cf426544355cf5d6891d85b279e0ed0d3") << OP_CHECKSIG;
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock.SetNull();
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
