@@ -102,11 +102,11 @@ height and can be explicitly disabled.
 Where do I begin?
 -----------------
 We have a guide for joining the main Joshcoin network:
-https://github.com/z-classic/joshcoin/wiki/1.0-User-Guide
+https://github.com/joshcoin/joshcoin/wiki/1.0-User-Guide
 
 ### Need Help?
 
-* See the documentation at the [Joshcoin Wiki](https://github.com/z-classic/joshcoin/wiki)
+* See the documentation at the [Joshcoin Wiki](https://github.com/joshcoin/joshcoin/wiki)
   for help and more information.
 * Ask for help on the [Joshcoin](http://zcltalk.tech/index.php) forum.
 
