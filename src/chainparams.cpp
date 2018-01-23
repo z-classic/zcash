@@ -84,6 +84,7 @@ public:
         genesis.vtx.push_back(txNew);
         genesis.hashPrevBlock.SetNull();
         genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+        LogPrint("MerkleTree genesis",genesis.hashMerkleRoot);
         genesis.nVersion = 4;
         genesis.nTime    = 1516450182;
         genesis.nBits    = 0x1f07ffff;
