@@ -1,9 +1,10 @@
-Zclassic v1.0.10-1
+Zclassic 1.0.14-alpha
+=====================
 
 NOTICE, the default ports have changed! The p2p port is now 8033 and rpcport is 8023
 
 What is Zclassic?
-----------------
+-----------------
 Zclassic is financial freedom.
 
 Install
@@ -83,8 +84,8 @@ blockchain has reached a significant size.
 Security Warnings
 -----------------
 
-See important security warnings in
-[doc/security-warnings.md](doc/security-warnings.md).
+See important security warnings on the
+[Security Information page](https://z.cash/support/security/).
 
 **Zclassic and Zcash are unfinished and highly experimental.** Use at your own risk.
 
@@ -119,7 +120,7 @@ Participation in the Zcash project is subject to a
 Building
 --------
 
-Build Zcash along with most dependencies from source by running
+Build Zclassic along with most dependencies from source by running
 ./zcutil/build.sh. Currently only Linux is officially supported.
 
 License
