@@ -74,6 +74,7 @@ EOF
 fi
 
 set -x
+cd "$(dirname "$(readlink -f "$0")")/.."
 
 # If --enable-lcov is the first argument, enable lcov coverage support:
 LCOV_ARG=''
@@ -132,5 +133,5 @@ ld -v
 
 HOST="$HOST" BUILD="$BUILD" NO_RUST="$RUST_ARG" NO_PROTON="$PROTON_ARG" "$MAKE" "$@" -C ./depends/ V=1
 ./autogen.sh
-CC="$CC" CXX="$CXX" ./configure --prefix="${PREFIX}" --host="$HOST" --build="$BUILD" "$RUST_ARG" "$HARDENING_ARG" "$LCOV_ARG" "$TEST_ARG" "$MINING_ARG" "$PROTON_ARG" "$LIBS_ARG" --enable-werror CXXFLAGS='-g'
+CC="$CC" CXX="$CXX" ./configure --prefix="${PREFIX}" --host="$HOST" --build="$BUILD" "$RUST_ARG" "$HARDENING_ARG" "$LCOV_ARG" "$TEST_ARG" "$MINING_ARG" "$PROTON_ARG" "$LIBS_ARG" --enable-werror CXXFLAGS='-fwrapv -fno-strict-aliasing -Wno-builtin-declaration-mismatch -Werror -g'
 "$MAKE" "$@" V=1
