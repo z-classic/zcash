@@ -2722,6 +2722,9 @@ bool ActivateBestChain(CValidationState &state, CBlock *pblock) {
         }
 
         if (nStopAtHeight && pindexNewTip && pindexNewTip->nHeight >= nStopAtHeight) StartShutdown();
+
+        if(ShutdownRequested())
+            break;
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex();
 
