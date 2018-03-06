@@ -2338,6 +2338,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"generated\" : true|false  (boolean) true if txout is a coinbase transaction output\n"
             "    \"address\" : \"address\",  (string) the zcash address\n"
+            "    \"generated\" : true|false  (boolean) true if txout is a coinbase transaction output\n"
             "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\", (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
@@ -3554,14 +3555,13 @@ UniValue z_shieldcoinbase(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 2 || params.size() > 4)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
             "z_shieldcoinbase \"fromaddress\" \"tozaddress\" ( fee ) ( limit )\n"
             "\nShield transparent coinbase funds by sending to a shielded zaddr.  This is an asynchronous operation and utxos"
             "\nselected for shielding will be locked.  If there is an error, they are unlocked.  The RPC call `listlockunspent`"
-            "\ncan be used to return a list of locked utxos.  The number of coinbase utxos selected for shielding can be limited"
-            "\nby the caller.  If the limit parameter is set to zero, the -mempooltxinputlimit option will determine the number"
-            "\nof uxtos.  Any limit is constrained by the consensus rule defining a maximum transaction size of "
+            "\ncan be used to return a list of locked utxos.  The number of coinbase utxos selected for shielding is limited by"
+            "\nboth the -mempooltxinputlimit=xxx option and a consensus rule defining a maximum transaction size of "
             + strprintf("%d bytes.", MAX_TX_SIZE)
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"

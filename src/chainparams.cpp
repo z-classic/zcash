@@ -95,7 +95,20 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
+
         //vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "na1.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "na2.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "na3.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "eu1.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "eu2.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "eu3.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "as1.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "as2.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "as3.zclassic.org")); // zclassic
+        
+        vSeeds.push_back(CDNSSeedData("chains.run", "seed.zcl.chains.run")); //rizkiwicaksono/bitcoin-seeder
+
         vSeeds.push_back(CDNSSeedData("indieonion.org", "dnsseed.indieonion.org")); // @IndieOnion
         vSeeds.push_back(CDNSSeedData("rotorproject.org", "dnsseed.rotorproject.org")); // @IndieOnion
 
@@ -229,7 +242,7 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("rotorproject.org", "test-dnsseed.rotorproject.org")); // Zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.testnet.zclassic.org")); // Zclassic
 
         // guarantees the first 2 characters, when base58 encoded, are "tm"
         base58Prefixes[PUBKEY_ADDRESS]     = {0x1D,0x25};

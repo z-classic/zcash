@@ -1251,7 +1251,7 @@ BOOST_AUTO_TEST_CASE(rpc_z_shieldcoinbase_parameters)
 
     BOOST_CHECK_THROW(CallRPC("z_shieldcoinbase"), runtime_error);
     BOOST_CHECK_THROW(CallRPC("z_shieldcoinbase toofewargs"), runtime_error);
-    BOOST_CHECK_THROW(CallRPC("z_shieldcoinbase too many args shown here"), runtime_error);
+    BOOST_CHECK_THROW(CallRPC("z_shieldcoinbase too many args here"), runtime_error);
 
     // bad from address
     BOOST_CHECK_THROW(CallRPC("z_shieldcoinbase "
@@ -1372,7 +1372,7 @@ BOOST_AUTO_TEST_CASE(rpc_z_shieldcoinbase_internals)
         try {
             proxy.perform_joinsplit(info);
         } catch (const std::runtime_error & e) {
-            BOOST_CHECK( string(e.what()).find("error verifying joinsplit")!= string::npos);
+            BOOST_CHECK( string(e.what()).find("JoinSplit verifying key not loaded")!= string::npos);
         }
     }
 
