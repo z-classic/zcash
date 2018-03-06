@@ -2,6 +2,8 @@ Zclassic 1.0.14-alpha
 =====================
 
 NOTICE, the default ports have changed! The p2p port is now 8033 and rpcport is 8023
+* Linux binaries are here for testing: https://github.com/nimbosa/zclassic/releases
+* GUI / Swing Wallet UI is here: https://github.com/nimbosa/zclassic/blob/master/ZClassicSwingWalletUI.jar
 
 What is Zclassic?
 -----------------
