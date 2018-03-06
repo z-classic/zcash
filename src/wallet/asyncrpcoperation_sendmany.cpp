@@ -970,6 +970,7 @@ UniValue AsyncRPCOperation_sendmany::perform_joinsplit(
     #else
     boost::array<size_t, ZC_NUM_JS_INPUTS> inputMap;
     boost::array<size_t, ZC_NUM_JS_OUTPUTS> outputMap;
+    #endif
 
     uint256 esk; // payment disclosure - secret
 
