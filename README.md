@@ -1,5 +1,5 @@
-Zclassic 1.0.14-alpha
-=====================
+Zclassic 1.0.14
+===============
 
 NOTICE, the default ports have changed! The p2p port is now 8033 and rpcport is 8023
 * Linux binaries are here for testing: https://github.com/nimbosa/zclassic/releases
@@ -163,7 +163,7 @@ https://github.com/z-classic/zclassic/wiki/1.0-User-Guide
 ### Need Help?
 * See the documentation at the [Zclassic Wiki](https://github.com/z-classic/zclassic/wiki)
   for help and more information.
-* Ask for help on the [Zclassic](http://zcltalk.tech/index.php) forum.
+* Ask for help on the [Zclassic Community Edition Discord Channel](https://discord.gg/NRdczWC).
 
 ### Want to participate in development?
 * Code review is welcome!
