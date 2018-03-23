@@ -1,15 +1,23 @@
 Zclassic 1.0.14
 ===============
+[![Twitter Follow](https://img.shields.io/twitter/follow/ZclassicDev.svg?style=social)](https://twitter.com/ZclassicDev)
+[![Tweet](https://img.shields.io/twitter/url/https/github.com/ZclassicDev/ZclassicDev.github.io/README.md.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20out%20Zclassic%20community's%20continuity%20plan%20-%20open%20to%20your%20feedback%20/%20suggestions:%20%F0%9F%A4%97%20%9C%A8%20https://github.com/ZclassicDev/ZclassicDev.github.io/README.md)
+[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/45NNrMJ) [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg?style=flat)](https://github.com/ZclassicDev/zclassic/releases)
 
-NOTICE, the default ports have changed! The p2p port is now 8033 and rpcport is 8023
-* Linux binaries are here for testing: https://github.com/nimbosa/zclassic/releases
-* GUI / Swing Wallet UI is here: https://github.com/nimbosa/zclassic/blob/master/ZClassicSwingWalletUI.jar
+NOTICE, the default ports have changed!  P2P Port = **8033** and RPC Port = **8023**.
+* Windows and Linux binaries are available here: https://github.com/ZclassicDev/zclassic/releases
+* GUI / Swing Wallet UI is here: https://github.com/ZclassicDev/zclassic/blob/master/ZClassicSwingWalletUI.jar
+
 
 What is Zclassic?
 -----------------
 #### Zclassic is financial freedom.
 
-A cryptocurrency with a focus on privacy, it uses the same initial ceremony parameters generated for [Zcash](https://github.com/zcash/zcash), as well as zk-SNARKs for transaction shielding. The major change - there is no 20% [founders' fee](https://blog.z.cash/funding/) taken for mining each block.  More technical details are available in the [Zcash Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
+A cryptocurrency with a focus on privacy, it uses the same initial ceremony
+parameters generated for [Zcash](https://github.com/zcash/zcash), as well as
+zk-SNARKs for transaction shielding. The major change - there is no 20%
+[founders' fee](https://blog.z.cash/funding/) taken for mining each block.
+More technical details are available in the [Zcash Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
 
 This software is the Zclassic client. It downloads and stores the entire history
 of Zclassic transactions; depending on the speed of your computer and network
@@ -20,18 +28,40 @@ Two main files of interest in this repo are `zcashd` and `zcash-cli`,
 which should be renamed to `zcld` and `zcl-cli` for use in the full-node wallet.
 The project needs to be built (per the instructions) in order to generate them.
 
-**P2P Port -** 8033  
-**RPC Port -** 8023
+Security Warnings
+-----------------
+See important security warnings on the
+[Security Information page](https://z.cash/support/security/).
 
-**Documentation is at the [Zclassic wiki](https://github.com/z-classic/zclassic/wiki)**
+Zclassic and Zcash are **unfinished** and **highly experimental**. Use at your own risk.
 
-**View unsolved problems on the [issue tracker](https://github.com/z-classic/zclassic/wiki)**
+Deprecation Policy
+------------------
+This release is considered deprecated 16 weeks after the release day. There
+is an automatic deprecation shutdown feature which will halt the node some
+time after this 16 week time period. The automatic feature is based on block
+height and can be explicitly disabled.
 
-**Join the conversation on Discord:
-https://discord.gg/NyPnDJS**
+Where do I begin?
+-----------------
+We have a guide for joining the main Zclassic network:
+https://github.com/z-classic/zclassic/wiki/Getting-Started
 
-Participation in the Zclassic project is subject to a
-[Code of Conduct](code_of_conduct.md). This is based on the original Zcash Code of Conduct.
+### Need help? Want to participate in development?
+* Documentation is at the **[Zclassic wiki](https://github.com/z-classic/zclassic/wiki)**.
+* View unsolved problems on the **[issue tracker](https://github.com/z-classic/zclassic/issues)**
+and [request improvement **here**](https://github.com/ZclassicDev/zclassic/issues).
+* Code review is welcome! You may also send us a
+[pull request](https://github.com/ZclassicDev/zclassic/pulls)
+if you want to add something here.
+
+Participation in the Zclassic project is subject to
+a [Code of Conduct](code_of_conduct.md). This is based on
+the original Zcash Code of Conduct.
+
+Join the conversation on
+[**Discord: Zclassic Community Edition** https://discord.gg/45NNrMJ](https://discord.gg/45NNrMJ).
+
 
 Build and Installation
 ----------------------
@@ -58,11 +88,19 @@ Install
 ### Windows
 There are two proven ways to build Zclassic for Windows:
 
-* On Linux using [MinGW-w64](https://mingw-w64.org/doku.php) cross compiler tool chain. Ubuntu 16.04 Xenial is proven to work and the instructions is for such release.
-* On Windows 10 (64-bit version) using [Windows Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about) and the MinGW-w64 cross-compiler toolchain.
+* On Linux using [MinGW-w64](https://mingw-w64.org/doku.php) cross compiler
+tool chain. Ubuntu 16.04 Xenial is proven to work and the instructions is for
+such release.
+* On Windows 10 (64-bit version) using
+[Windows Subsystem for Linux (WSL)](https://msdn.microsoft.com/commandline/wsl/about)
+and the MinGW-w64 cross-compiler toolchain.
 
-With Windows 10, Microsoft released a feature called WSL. It basically allows you to run a bash shell directly on Windows in an Ubuntu environment. WSL can be installed with other Linux variants, but as mentioned before, the distro proven to work is Ubuntu.
-Follow [this link](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide) to install WSL (recommended method).
+With Windows 10, Microsoft released a feature called WSL. It basically allows
+you to run a bash shell directly on Windows in an Ubuntu environment. WSL can
+be installed with other Linux variants, but as mentioned before, the distro
+proven to work is Ubuntu. Follow
+[this link](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide)
+to install WSL (recommended method).
 
 #### Building for Windows 64-Bit
 1. Get the usual dependencies:
@@ -101,18 +139,22 @@ and add:
 linker = "/usr/bin/x86_64-w64-mingw32-gcc"
 ```
 
-Note that in WSL, the Zclassic source code must be somewhere in the default mount file system, i.e `/usr/src/zclassic`, and not on `/mnt/d/`. What this means is that you cannot build directly on the Windows system.
+Note that in WSL, the Zclassic source code must be somewhere in the default
+mount file system, i.e `/usr/src/zclassic`, and not on `/mnt/d/`. What this
+means is that you cannot build directly on the Windows system.
 
 4. Build for Windows
 
 ```{r, engine='bash'}
-PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var. ONLY FOR WSL
+PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows
+%PATH% imported var. ONLY FOR WSL
 ./zcutil/build-win.sh -j$(nproc)
 ```
 
 5. Installation
 
-After building in WSL, you can make a copy of the compiled executables to a directory on your Windows file system. This is done the following way
+After building in WSL, you can make a copy of the compiled executables to a
+directory on your Windows file system. This is done the following way
 
 ```{r, engine='bash'}
 make install DESTDIR=/mnt/c/zcl/zclassic
@@ -140,37 +182,6 @@ Install
 # Run
 ./src/zcashd
 ```
-
-Security Warnings
------------------
-See important security warnings on the
-[Security Information page](https://z.cash/support/security/).
-
-Zclassic and Zcash are **unfinished** and **highly experimental**. Use at your own risk.
-
-Deprecation Policy
-------------------
-This release is considered deprecated 16 weeks after the release day. There
-is an automatic deprecation shutdown feature which will halt the node some
-time after this 16 week time period. The automatic feature is based on block
-height and can be explicitly disabled.
-
-Where do I begin?
------------------
-We have a guide for joining the main Zclassic network:
-https://github.com/z-classic/zclassic/wiki/1.0-User-Guide
-
-### Need Help?
-* See the documentation at the [Zclassic Wiki](https://github.com/z-classic/zclassic/wiki)
-  for help and more information.
-* Ask for help on the [Zclassic Community Edition Discord Channel](https://discord.gg/NRdczWC).
-
-### Want to participate in development?
-* Code review is welcome!
-* If you want to get to know us join our slack: http://zclassic.herokuapp.com/
-
-Participation in the Zcash project is subject to a
-[Code of Conduct](code_of_conduct.md).
 
 
 License
