@@ -55,7 +55,7 @@ install:
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
     - sudo apt-get install -y apt-utils
-    - sudo apt-get install -y libleveldb1v5 libleveldb-dev
+    - sudo apt-get install -y libleveldb1 libleveldb-dev
     - sudo apt-get install -y build-essential pkg-config libc6-dev m4 g++-multilib autoconf libtool ncurses-dev unzip git python zlib1g-dev wget bsdmainutils automake
 
 before_script:
