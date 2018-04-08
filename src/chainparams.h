@@ -70,8 +70,8 @@ public:
     bool RequireStandard() const { return fRequireStandard; }
     int64_t MaxTipAge() const { return nMaxTipAge; }
     int64_t PruneAfterHeight() const { return nPruneAfterHeight; }
-    unsigned int EquihashN() const { return nEquihashN; }
-    unsigned int EquihashK() const { return nEquihashK; }
+    unsigned int EquihashN(int nHeight = 0) const;
+    unsigned int EquihashK(int nHeight = 0) const;
     std::string CurrencyUnits() const { return strCurrencyUnits; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
@@ -138,5 +138,10 @@ bool SelectParamsFromCommandLine();
  * Allows modifying the network upgrade regtest parameters.
  */
 void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight);
+
+/**
+ * Let developers modify the equihash upgrade parameters for testing purposes.
+ */
+void UpdateEquihashUpgradeParameters(Consensus::UpgradeIndex idx, unsigned int n, unsigned int k);
 
 #endif // BITCOIN_CHAINPARAMS_H

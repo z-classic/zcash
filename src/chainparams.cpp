@@ -511,3 +511,30 @@ void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivation
 {
     regTestParams.UpdateNetworkUpgradeParameters(idx, nActivationHeight);
 }
+
+// To help debugging, let developers change the equihash parameters for a network upgrade.
+// TODO: Restrict this to regtest mode in the future.
+void UpdateEquihashUpgradeParameters(Consensus::UpgradeIndex idx, unsigned int n, unsigned int k)
+{
+    assert(idx > Consensus::BASE_SPROUT && idx < Consensus::MAX_NETWORK_UPGRADES);
+    EquihashUpgradeInfo[idx].N = n;
+    EquihashUpgradeInfo[idx].K = k;
+}
+
+// Return Equihash parameter N at a given block height.
+unsigned int CChainParams::EquihashN(int nHeight) const {
+    unsigned int n = EquihashUpgradeInfo[CurrentEpoch(nHeight, GetConsensus())].N;
+    if (n == EquihashInfo::DEFAULT_PARAMS) {
+        n = nEquihashN;
+    }
+    return n;
+}
+
+// Return Equihash parameter K at a given block height.
+unsigned int CChainParams::EquihashK(int nHeight) const {
+    unsigned int k = EquihashUpgradeInfo[CurrentEpoch(nHeight, GetConsensus())].K;
+    if (k == EquihashInfo::DEFAULT_PARAMS) {
+        k = nEquihashK;
+    }
+    return k;
+}
