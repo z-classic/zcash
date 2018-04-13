@@ -1,9 +1,9 @@
 ---
-name: "zcash-1.0.14"
+name: "zclassic-1.0.14"
 enable_cache: true
 distro: "debian"
 suites:
-- "jessie"
+- "wheezy"
 architectures:
 - "amd64"
 packages:
@@ -25,8 +25,8 @@ packages:
 - "wget"
 - "zlib1g-dev"
 remotes:
-- "url": "https://github.com/zcash/zcash.git"
-  "dir": "zcash"
+- "url": "https://github.com/ZclassicDev/zclassic.git"
+  "dir": "zclassic"
 files: []
 script: |
   WRAP_DIR=$HOME/wrapped
