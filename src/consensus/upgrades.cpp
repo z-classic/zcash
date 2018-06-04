@@ -33,6 +33,30 @@ const struct NUInfo NetworkUpgradeInfo[Consensus::MAX_NETWORK_UPGRADES] = {
 
 const uint32_t SPROUT_BRANCH_ID = NetworkUpgradeInfo[Consensus::BASE_SPROUT].nBranchId;
 
+/**
+ * General information associating epoch with equihash parameters.
+ * Ordered by Consensus::UpgradeIndex, to match NetworkUpgradeInfo.
+ * TODO: Maybe refactor and include in NetworkUpgradeInfo
+ * TODO: Make this const
+ */
+struct EquihashInfo EquihashUpgradeInfo[Consensus::MAX_NETWORK_UPGRADES] = {
+    // BASE_SPROUT
+    {
+        /* N = */ EquihashInfo::DEFAULT_PARAMS,
+        /* K = */ EquihashInfo::DEFAULT_PARAMS,
+    },
+    // UPGRADE_TESTDUMMY
+    {
+        /* N = */ EquihashInfo::DEFAULT_PARAMS,
+        /* K = */ EquihashInfo::DEFAULT_PARAMS,
+    },
+    //  UPGRADE_OVERWINTER
+    {
+        /* N = */ 144, // FIXME: This is just an example
+        /* K = */ 5,   // FIXME: This is just an example
+    }
+};
+
 UpgradeState NetworkUpgradeState(
     int nHeight,
     const Consensus::Params& params,
