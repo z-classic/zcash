@@ -54,7 +54,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CAddress*)this);
         READWRITE(source);
         READWRITE(nLastSuccess);
@@ -234,7 +234,7 @@ protected:
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
     CAddrInfo Select_(bool newOnly);
 
-    //! Wraps GetRandInt to allow tests to override RandomInt and make it determinismistic.
+    //! Wraps GetRandInt to allow tests to override RandomInt and make it deterministic.
     virtual int RandomInt(int nMax);
 
 #ifdef DEBUG_ADDRMAN
@@ -279,7 +279,7 @@ public:
      * very little in common.
      */
     template<typename Stream>
-    void Serialize(Stream &s, int nType, int nVersionDummy) const
+    void Serialize(Stream &s) const
     {
         LOCK(cs);
 
@@ -329,7 +329,7 @@ public:
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersionDummy)
+    void Unserialize(Stream& s)
     {
         LOCK(cs);
 
@@ -432,11 +432,6 @@ public:
         }
 
         Check();
-    }
-
-    unsigned int GetSerializeSize(int nType, int nVersion) const
-    {
-        return (CSizeComputer(nType, nVersion) << *this).size();
     }
 
     void Clear()

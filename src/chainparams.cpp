@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "key_io.h"
 #include "main.h"
 #include "crypto/equihash.h"
 
@@ -13,11 +14,55 @@
 
 #include <boost/assign/list_of.hpp>
 
-#include "base58.h"
-
-using namespace std;
-
 #include "chainparamsseeds.h"
+
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, const uint256& nNonce, const std::vector<unsigned char>& nSolution, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    // To create a genesis block for a new chain which is Overwintered:
+    //   txNew.nVersion = OVERWINTER_TX_VERSION
+    //   txNew.fOverwintered = true
+    //   txNew.nVersionGroupId = OVERWINTER_VERSION_GROUP_ID
+    //   txNew.nExpiryHeight = <default value>
+    CMutableTransaction txNew;
+    txNew.nVersion = 1;
+    txNew.vin.resize(1);
+    txNew.vout.resize(1);
+    txNew.vin[0].scriptSig = CScript() << 520617983 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vout[0].nValue = genesisReward;
+    txNew.vout[0].scriptPubKey = genesisOutputScript;
+
+    CBlock genesis;
+    genesis.nTime    = nTime;
+    genesis.nBits    = nBits;
+    genesis.nNonce   = nNonce;
+    genesis.nSolution = nSolution;
+    genesis.nVersion = nVersion;
+    genesis.vtx.push_back(txNew);
+    genesis.hashPrevBlock.SetNull();
+    genesis.hashMerkleRoot = genesis.BuildMerkleTree();
+    return genesis;
+}
+
+/**
+ * Build the genesis block. Note that the output of its generation
+ * transaction cannot be spent since it did not originally exist in the
+ * database (and is in any case of zero value).
+ *
+ * >>> from pyblake2 import blake2s
+ * >>> 'Zcash' + blake2s(b'The Economist 2016-10-29 Known unknown: Another crypto-currency is born. BTC#436254 0000000000000000044f321997f336d2908cf8c8d6893e88dbf067e2d949487d ETH#2521903 483039a6b6bd8bd05f0584f9a078d075e454925eb71c1f13eaff59b405a721bb DJIA close on 27 Oct 2016: 18,169.68').hexdigest()
+ *
+ * CBlock(hash=00040fe8, ver=4, hashPrevBlock=00000000000000, hashMerkleRoot=c4eaa5, nTime=1477641360, nBits=1f07ffff, nNonce=4695, vtx=1)
+ *   CTransaction(hash=c4eaa5, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+ *     CTxIn(COutPoint(000000, -1), coinbase 04ffff071f0104455a6361736830623963346565663862376363343137656535303031653335303039383462366665613335363833613763616331343161303433633432303634383335643334)
+ *     CTxOut(nValue=0.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
+ *   vMerkleTree: c4eaa5
+ */
+static CBlock CreateGenesisBlock(uint32_t nTime, const uint256& nNonce, const std::vector<unsigned char>& nSolution, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+{
+    const char* pszTimestamp = "Zcash0b9c4eef8b7cc417ee5001e3500984b6fea35683a7cac141a043c42064835d34";
+    const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nSolution, nBits, nVersion, genesisReward);
+}
 
 /**
  * Main network
@@ -49,6 +94,18 @@ public:
         consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
         consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
         consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nActivationHeight =
+            Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nProtocolVersion = 170005;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nActivationHeight = 347500;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nProtocolVersion = 170007;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+
         /**
          * The message start string should be awesome! ⓩ❤
          */
@@ -214,7 +271,7 @@ static CMainParams mainParams;
 /**
  * Testnet (v3)
  */
-class CTestNetParams : public CMainParams {
+class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
@@ -223,14 +280,34 @@ public:
         consensus.nMajorityRejectBlockOutdated = 75;
         consensus.nMajorityWindow = 400;
         consensus.powLimit = uint256S("07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowAveragingWindow = 17;
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
+        consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
+        consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
+        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nActivationHeight =
+            Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nProtocolVersion = 170003;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nActivationHeight = 207500;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nProtocolVersion = 170006;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nActivationHeight = 252500;
+
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0x1a;
         pchMessageStart[2] = 0xf9;
         pchMessageStart[3] = 0xbf;
         vAlertPubKey = ParseHex("048679fb891b15d0cada9692047fd0ae26ad8bfb83fabddbb50334ee5bc0683294deb410be20513c5af6e7b9cec717ade82b27080ee6ef9a245c36a795ab044bb3");
-        nDefaultPort = 18233;
+        nDefaultPort = 18033;
+        nMaxTipAge = 24 * 60 * 60;
         nPruneAfterHeight = 1000;
+        const size_t N = 200, K = 9;
+        BOOST_STATIC_ASSERT(equihash_parameters_acceptable(N, K));
+        nEquihashN = N;
+        nEquihashK = K;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1479443947;
@@ -270,7 +347,7 @@ public:
 
         checkpointData = (Checkpoints::CCheckpointData) {
             boost::assign::map_list_of
-            ( 0, consensus.hashGenesisBlock),
+            (0, consensus.hashGenesisBlock),
             genesis.nTime,
             0,
             0
@@ -301,7 +378,7 @@ static CTestNetParams testNetParams;
 /**
  * Regression test
  */
-class CRegTestParams : public CTestNetParams {
+class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
         strNetworkID = "regtest";
@@ -313,14 +390,31 @@ public:
         consensus.nMajorityRejectBlockOutdated = 950;
         consensus.nMajorityWindow = 1000;
         consensus.powLimit = uint256S("0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f");
+        consensus.nPowAveragingWindow = 17;
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
         consensus.nPowMaxAdjustDown = 0; // Turn off adjustment down
         consensus.nPowMaxAdjustUp = 0; // Turn off adjustment up
+        consensus.nPowTargetSpacing = 2.5 * 60;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::BASE_SPROUT].nActivationHeight =
+            Consensus::NetworkUpgrade::ALWAYS_ACTIVE;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nProtocolVersion = 170002;
+        consensus.vUpgrades[Consensus::UPGRADE_TESTDUMMY].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nProtocolVersion = 170003;
+        consensus.vUpgrades[Consensus::UPGRADE_OVERWINTER].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nProtocolVersion = 170006;
+        consensus.vUpgrades[Consensus::UPGRADE_SAPLING].nActivationHeight =
+            Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT;
+
         pchMessageStart[0] = 0xaa;
         pchMessageStart[1] = 0xe8;
         pchMessageStart[2] = 0x3f;
         pchMessageStart[3] = 0x5f;
+        nDefaultPort = 18344;
         nMaxTipAge = 24 * 60 * 60;
+        nPruneAfterHeight = 1000;
         const size_t N = 48, K = 5;
         BOOST_STATIC_ASSERT(equihash_parameters_acceptable(N, K));
         nEquihashN = N;
@@ -343,18 +437,34 @@ public:
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
 
-        checkpointData = (Checkpoints::CCheckpointData){
+        checkpointData = (CCheckpointData){
             boost::assign::map_list_of
             ( 0, uint256S("0x0575f78ee8dc057deee78ef691876e3be29833aaee5e189bb0459c087451305a")),
             0,
             0,
             0
         };
+        // These prefixes are the same as the testnet prefixes
+        base58Prefixes[PUBKEY_ADDRESS]     = {0x1D,0x25};
+        base58Prefixes[SCRIPT_ADDRESS]     = {0x1C,0xBA};
+        base58Prefixes[SECRET_KEY]         = {0xEF};
+        // do not rely on these BIP32 prefixes; they are not specified and may change
+        base58Prefixes[EXT_PUBLIC_KEY]     = {0x04,0x35,0x87,0xCF};
+        base58Prefixes[EXT_SECRET_KEY]     = {0x04,0x35,0x83,0x94};
+        base58Prefixes[ZCPAYMENT_ADDRRESS] = {0x16,0xB6};
+        base58Prefixes[ZCVIEWING_KEY]      = {0xA8,0xAC,0x0C};
+        base58Prefixes[ZCSPENDING_KEY]     = {0xAC,0x08};
 
         // Founders reward script expects a vector of 2-of-3 multisig addresses
         //vFoundersRewardAddress = { "t2FwcEhFdNXuFMv1tcYwaBJtYVtMj8b1uTg" };
     vFoundersRewardAddress = { };
         assert(vFoundersRewardAddress.size() <= consensus.GetLastFoundersRewardBlockHeight());
+    }
+
+    void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight)
+    {
+        assert(idx > Consensus::BASE_SPROUT && idx < Consensus::MAX_NETWORK_UPGRADES);
+        consensus.vUpgrades[idx].nActivationHeight = nActivationHeight;
     }
 };
 static CRegTestParams regTestParams;
@@ -417,10 +527,10 @@ std::string CChainParams::GetFoundersRewardAddressAtHeight(int nHeight) const {
 CScript CChainParams::GetFoundersRewardScriptAtHeight(int nHeight) const {
     assert(nHeight > 0 && nHeight <= consensus.GetLastFoundersRewardBlockHeight());
 
-    CBitcoinAddress address(GetFoundersRewardAddressAtHeight(nHeight).c_str());
-    assert(address.IsValid());
-    assert(address.IsScript());
-    CScriptID scriptID = get<CScriptID>(address.Get()); // Get() returns a boost variant
+    CTxDestination address = DecodeDestination(GetFoundersRewardAddressAtHeight(nHeight).c_str());
+    assert(IsValidDestination(address));
+    assert(boost::get<CScriptID>(&address) != nullptr);
+    CScriptID scriptID = boost::get<CScriptID>(address); // address is a boost variant
     CScript script = CScript() << OP_HASH160 << ToByteVector(scriptID) << OP_EQUAL;
     return script;
 }
@@ -428,4 +538,36 @@ CScript CChainParams::GetFoundersRewardScriptAtHeight(int nHeight) const {
 std::string CChainParams::GetFoundersRewardAddressAtIndex(int i) const {
     assert(i >= 0 && i < vFoundersRewardAddress.size());
     return vFoundersRewardAddress[i];
+}
+
+void UpdateNetworkUpgradeParameters(Consensus::UpgradeIndex idx, int nActivationHeight)
+{
+    regTestParams.UpdateNetworkUpgradeParameters(idx, nActivationHeight);
+}
+
+// To help debugging, let developers change the equihash parameters for a network upgrade.
+// TODO: Restrict this to regtest mode in the future.
+void UpdateEquihashUpgradeParameters(Consensus::UpgradeIndex idx, unsigned int n, unsigned int k)
+{
+    assert(idx > Consensus::BASE_SPROUT && idx < Consensus::MAX_NETWORK_UPGRADES);
+    EquihashUpgradeInfo[idx].N = n;
+    EquihashUpgradeInfo[idx].K = k;
+}
+
+// Return Equihash parameter N at a given block height.
+unsigned int CChainParams::EquihashN(int nHeight) const {
+    unsigned int n = EquihashUpgradeInfo[CurrentEpoch(nHeight, GetConsensus())].N;
+    if (n == EquihashInfo::DEFAULT_PARAMS) {
+        n = nEquihashN;
+    }
+    return n;
+}
+
+// Return Equihash parameter K at a given block height.
+unsigned int CChainParams::EquihashK(int nHeight) const {
+    unsigned int k = EquihashUpgradeInfo[CurrentEpoch(nHeight, GetConsensus())].K;
+    if (k == EquihashInfo::DEFAULT_PARAMS) {
+        k = nEquihashK;
+    }
+    return k;
 }

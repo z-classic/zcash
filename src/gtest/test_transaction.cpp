@@ -12,10 +12,10 @@ TEST(Transaction, JSDescriptionRandomized) {
     // construct a merkle tree
     ZCIncrementalMerkleTree merkleTree;
 
-    libzcash::SpendingKey k = libzcash::SpendingKey::random();
-    libzcash::PaymentAddress addr = k.address();
+    libzcash::SproutSpendingKey k = libzcash::SproutSpendingKey::random();
+    libzcash::SproutPaymentAddress addr = k.address();
 
-    libzcash::Note note(addr.a_pk, 100, uint256(), uint256());
+    libzcash::SproutNote note(addr.a_pk, 100, uint256(), uint256());
 
     // commitment from coin
     uint256 commitment = note.cm();
@@ -48,6 +48,7 @@ TEST(Transaction, JSDescriptionRandomized) {
 
     {
         auto jsdesc = JSDescription::Randomized(
+            false,
             *params, pubKeyHash, rt,
             inputs, outputs,
             inputMap, outputMap,
@@ -74,6 +75,7 @@ TEST(Transaction, JSDescriptionRandomized) {
 
     {
         auto jsdesc = JSDescription::Randomized(
+            false,
             *params, pubKeyHash, rt,
             inputs, outputs,
             inputMap, outputMap,
@@ -92,6 +94,7 @@ TEST(Transaction, JSDescriptionRandomized) {
 
     {
         auto jsdesc = JSDescription::Randomized(
+            false,
             *params, pubKeyHash, rt,
             inputs, outputs,
             inputMap, outputMap,

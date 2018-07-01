@@ -8,9 +8,9 @@
 
 #include "amount.h"
 #include "coins.h"
-#include "consensus/consensus.h"
 #include "key.h"
 #include "keystore.h"
+#include "main.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "tinyformat.h"
@@ -58,7 +58,7 @@ static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 //! Size of witness cache
 //  Should be large enough that we can expect not to reorg beyond our cache
 //  unless there is some exceptional network disruption.
-static const unsigned int WITNESS_CACHE_SIZE = COINBASE_MATURITY;
+static const unsigned int WITNESS_CACHE_SIZE = MAX_REORG_LENGTH + 1;
 
 class CBlockIndex;
 class CCoinControl;
@@ -93,8 +93,9 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(nTime);
         READWRITE(vchPubKey);
@@ -152,28 +153,30 @@ struct COutputEntry
     int vout;
 };
 
-/** An note outpoint */
+/** A note outpoint */
 class JSOutPoint
 {
 public:
     // Transaction hash
     uint256 hash;
     // Index into CTransaction.vjoinsplit
-    #ifdef __LP64__ // required to build on MacOS due to size_t ambiguity errors
     uint64_t js;
     #else
     size_t js;
     #endif
+=======
+    uint64_t js;
+>>>>>>> pr/6
     // Index into JSDescription fields of length ZC_NUM_JS_OUTPUTS
     uint8_t n;
 
     JSOutPoint() { SetNull(); }
-    JSOutPoint(uint256 h, size_t js, uint8_t n) : hash {h}, js {js}, n {n} { }
+    JSOutPoint(uint256 h, uint64_t js, uint8_t n) : hash {h}, js {js}, n {n} { }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(hash);
         READWRITE(js);
         READWRITE(n);
@@ -202,7 +205,7 @@ public:
 class CNoteData
 {
 public:
-    libzcash::PaymentAddress address;
+    libzcash::SproutPaymentAddress address;
 
     /**
      * Cached note nullifier. May not be set if the wallet was not unlocked when
@@ -236,15 +239,15 @@ public:
     int witnessHeight;
 
     CNoteData() : address(), nullifier(), witnessHeight {-1} { }
-    CNoteData(libzcash::PaymentAddress a) :
+    CNoteData(libzcash::SproutPaymentAddress a) :
             address {a}, nullifier(), witnessHeight {-1} { }
-    CNoteData(libzcash::PaymentAddress a, uint256 n) :
+    CNoteData(libzcash::SproutPaymentAddress a, uint256 n) :
             address {a}, nullifier {n}, witnessHeight {-1} { }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(address);
         READWRITE(nullifier);
         READWRITE(witnesses);
@@ -268,13 +271,20 @@ public:
 typedef std::map<JSOutPoint, CNoteData> mapNoteData_t;
 
 /** Decrypted note and its location in a transaction. */
-struct CNotePlaintextEntry
+struct CSproutNotePlaintextEntry
 {
     JSOutPoint jsop;
-    libzcash::NotePlaintext plaintext;
+    libzcash::SproutPaymentAddress address;
+    libzcash::SproutNotePlaintext plaintext;
 };
 
-
+/** Decrypted note, location in a transaction, and confirmation height. */
+struct CUnspentSproutNotePlaintextEntry {
+    JSOutPoint jsop;
+    libzcash::SproutPaymentAddress address;
+    libzcash::SproutNotePlaintext plaintext;
+    int nHeight;
+};
 
 /** A transaction with a merkle branch linking it to the block chain. */
 class CMerkleTx : public CTransaction
@@ -311,9 +321,8 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CTransaction*)this);
-        nVersion = this->nVersion;
         READWRITE(hashBlock);
         READWRITE(vMerkleBranch);
         READWRITE(nIndex);
@@ -430,7 +439,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         if (ser_action.ForRead())
             Init(NULL);
         char fSpent = false;
@@ -563,8 +572,9 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPrivKey);
         READWRITE(nTimeCreated);
@@ -608,8 +618,9 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
         //! Note: strAccount is serialized as part of the key, not here.
         READWRITE(nCreditDebit);
@@ -622,7 +633,7 @@ public:
 
             if (!(mapValue.empty() && _ssExtra.empty()))
             {
-                CDataStream ss(nType, nVersion);
+                CDataStream ss(s.GetType(), s.GetVersion());
                 ss.insert(ss.begin(), '\0');
                 ss << mapValue;
                 ss.insert(ss.end(), _ssExtra.begin(), _ssExtra.end());
@@ -638,7 +649,7 @@ public:
             mapValue.clear();
             if (std::string::npos != nSepPos)
             {
-                CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), nType, nVersion);
+                CDataStream ss(std::vector<char>(strComment.begin() + nSepPos + 1, strComment.end()), s.GetType(), s.GetVersion());
                 ss >> mapValue;
                 _ssExtra = std::vector<char>(ss.begin(), ss.end());
             }
@@ -780,7 +791,7 @@ public:
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
-    std::map<libzcash::PaymentAddress, CKeyMetadata> mapZKeyMetadata;
+    std::map<libzcash::SproutPaymentAddress, CKeyMetadata> mapZKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -880,6 +891,7 @@ public:
     CPubKey vchDefaultKey;
 
     std::set<COutPoint> setLockedCoins;
+    std::set<JSOutPoint> setLockedNotes;
 
     int64_t nTimeFirstKey;
 
@@ -899,6 +911,14 @@ public:
     void UnlockCoin(COutPoint& output);
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
+
+
+    bool IsLockedNote(const JSOutPoint& outpt) const;
+    void LockNote(const JSOutPoint& output);
+    void UnlockNote(const JSOutPoint& output);
+    void UnlockAllNotes();
+    std::vector<JSOutPoint> ListLockedNotes();
+
 
     /**
      * keystore implementation
@@ -946,23 +966,23 @@ public:
       * ZKeys
       */
     //! Generates a new zaddr
-    CZCPaymentAddress GenerateNewZKey();
+    libzcash::PaymentAddress GenerateNewZKey();
     //! Adds spending key to the store, and saves it to disk
-    bool AddZKey(const libzcash::SpendingKey &key);
+    bool AddZKey(const libzcash::SproutSpendingKey &key);
     //! Adds spending key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadZKey(const libzcash::SpendingKey &key);
+    bool LoadZKey(const libzcash::SproutSpendingKey &key);
     //! Load spending key metadata (used by LoadWallet)
-    bool LoadZKeyMetadata(const libzcash::PaymentAddress &addr, const CKeyMetadata &meta);
+    bool LoadZKeyMetadata(const libzcash::SproutPaymentAddress &addr, const CKeyMetadata &meta);
     //! Adds an encrypted spending key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadCryptedZKey(const libzcash::PaymentAddress &addr, const libzcash::ReceivingKey &rk, const std::vector<unsigned char> &vchCryptedSecret);
+    bool LoadCryptedZKey(const libzcash::SproutPaymentAddress &addr, const libzcash::ReceivingKey &rk, const std::vector<unsigned char> &vchCryptedSecret);
     //! Adds an encrypted spending key to the store, and saves it to disk (virtual method, declared in crypter.h)
-    bool AddCryptedSpendingKey(const libzcash::PaymentAddress &address, const libzcash::ReceivingKey &rk, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddCryptedSpendingKey(const libzcash::SproutPaymentAddress &address, const libzcash::ReceivingKey &rk, const std::vector<unsigned char> &vchCryptedSecret);
 
     //! Adds a viewing key to the store, and saves it to disk.
-    bool AddViewingKey(const libzcash::ViewingKey &vk);
-    bool RemoveViewingKey(const libzcash::ViewingKey &vk);
+    bool AddViewingKey(const libzcash::SproutViewingKey &vk);
+    bool RemoveViewingKey(const libzcash::SproutViewingKey &vk);
     //! Adds a viewing key to the store, without saving it to disk (used by LoadWallet)
-    bool LoadViewingKey(const libzcash::ViewingKey &dest);
+    bool LoadViewingKey(const libzcash::SproutViewingKey &dest);
 
     /** 
      * Increment the next transaction order id
@@ -1025,7 +1045,7 @@ public:
 
     boost::optional<uint256> GetNoteNullifier(
         const JSDescription& jsdesc,
-        const libzcash::PaymentAddress& address,
+        const libzcash::SproutPaymentAddress& address,
         const ZCNoteDecryption& dec,
         const uint256& hSig,
         uint8_t n) const;
@@ -1125,12 +1145,25 @@ public:
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
     
     /* Find notes filtered by payment address, min depth, ability to spend */
-    void GetFilteredNotes(std::vector<CNotePlaintextEntry> & outEntries,
+    void GetFilteredNotes(std::vector<CSproutNotePlaintextEntry> & outEntries,
                           std::string address,
                           int minDepth=1,
                           bool ignoreSpent=true,
                           bool ignoreUnspendable=true);
+
+    /* Find notes filtered by payment addresses, min depth, ability to spend */
+    void GetFilteredNotes(std::vector<CSproutNotePlaintextEntry>& outEntries,
+                          std::set<libzcash::PaymentAddress>& filterAddresses,
+                          int minDepth=1,
+                          bool ignoreSpent=true,
+                          bool ignoreUnspendable=true);
     
+    /* Find unspent notes filtered by payment address, min depth and max depth */
+    void GetUnspentFilteredNotes(std::vector<CUnspentSproutNotePlaintextEntry>& outEntries,
+                                 std::set<libzcash::PaymentAddress>& filterAddresses,
+                                 int minDepth=1,
+                                 int maxDepth=INT_MAX,
+                                 bool requireSpendingKey=true);
 };
 
 /** A key allocated from the key pool. */
@@ -1180,8 +1213,9 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        if (!(nType & SER_GETHASH))
+    inline void SerializationOp(Stream& s, Operation ser_action) {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPubKey);
     }

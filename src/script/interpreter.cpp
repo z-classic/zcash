@@ -5,6 +5,7 @@
 
 #include "interpreter.h"
 
+#include "consensus/upgrades.h"
 #include "primitives/transaction.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
@@ -101,7 +102,7 @@ bool static IsValidSignatureEncoding(const std::vector<unsigned char> &sig) {
     //   excluding the sighash byte.
     // * R-length: 1-byte length descriptor of the R value that follows.
     // * R: arbitrary-length big-endian encoded R value. It must use the shortest
-    //   possible encoding for a positive integers (which means no null bytes at
+    //   possible encoding for a positive integer (which means no null bytes at
     //   the start, except a single one when the next byte has its highest bit set).
     // * S-length: 1-byte length descriptor of the S value that follows.
     // * S: arbitrary-length big-endian encoded S value. The same rules apply.
@@ -185,7 +186,7 @@ bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
     return true;
 }
 
-bool static CheckSignatureEncoding(const valtype &vchSig, unsigned int flags, ScriptError* serror) {
+bool CheckSignatureEncoding(const vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror) {
     // Empty signature. Not strictly DER encoded, but allowed to provide a
     // compact way to provide an invalid signature for use with CHECK(MULTI)SIG
     if (vchSig.size() == 0) {
@@ -232,7 +233,13 @@ bool static CheckMinimalPush(const valtype& data, opcodetype opcode) {
     return true;
 }
 
-bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool EvalScript(
+    vector<vector<unsigned char> >& stack,
+    const CScript& script,
+    unsigned int flags,
+    const BaseSignatureChecker& checker,
+    uint32_t consensusBranchId,
+    ScriptError* serror)
 {
     static const CScriptNum bnZero(0);
     static const CScriptNum bnOne(1);
@@ -840,7 +847,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         //serror is set
                         return false;
                     }
-                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, script);
+                    bool fSuccess = checker.CheckSig(vchSig, vchPubKey, script, consensusBranchId);
 
                     popstack(stack);
                     popstack(stack);
@@ -898,7 +905,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                         }
 
                         // Check signature
-                        bool fOk = checker.CheckSig(vchSig, vchPubKey, script);
+                        bool fOk = checker.CheckSig(vchSig, vchPubKey, script, consensusBranchId);
 
                         if (fOk) {
                             isig++;
@@ -986,7 +993,7 @@ public:
 
     /** Serialize the passed scriptCode */
     template<typename S>
-    void SerializeScriptCode(S &s, int nType, int nVersion) const {
+    void SerializeScriptCode(S &s) const {
         auto size = scriptCode.size();
         ::WriteCompactSize(s, size);
         s.write((char*)&scriptCode.begin()[0], size);
@@ -994,54 +1001,54 @@ public:
 
     /** Serialize an input of txTo */
     template<typename S>
-    void SerializeInput(S &s, unsigned int nInput, int nType, int nVersion) const {
+    void SerializeInput(S &s, unsigned int nInput) const {
         // In case of SIGHASH_ANYONECANPAY, only the input being signed is serialized
         if (fAnyoneCanPay)
             nInput = nIn;
         // Serialize the prevout
-        ::Serialize(s, txTo.vin[nInput].prevout, nType, nVersion);
+        ::Serialize(s, txTo.vin[nInput].prevout);
         // Serialize the script
         assert(nInput != NOT_AN_INPUT);
         if (nInput != nIn)
             // Blank out other inputs' signatures
-            ::Serialize(s, CScript(), nType, nVersion);
+            ::Serialize(s, CScriptBase());
         else
-            SerializeScriptCode(s, nType, nVersion);
+            SerializeScriptCode(s);
         // Serialize the nSequence
         if (nInput != nIn && (fHashSingle || fHashNone))
             // let the others update at will
-            ::Serialize(s, (int)0, nType, nVersion);
+            ::Serialize(s, (int)0);
         else
-            ::Serialize(s, txTo.vin[nInput].nSequence, nType, nVersion);
+            ::Serialize(s, txTo.vin[nInput].nSequence);
     }
 
     /** Serialize an output of txTo */
     template<typename S>
-    void SerializeOutput(S &s, unsigned int nOutput, int nType, int nVersion) const {
+    void SerializeOutput(S &s, unsigned int nOutput) const {
         if (fHashSingle && nOutput != nIn)
             // Do not lock-in the txout payee at other indices as txin
-            ::Serialize(s, CTxOut(), nType, nVersion);
+            ::Serialize(s, CTxOut());
         else
-            ::Serialize(s, txTo.vout[nOutput], nType, nVersion);
+            ::Serialize(s, txTo.vout[nOutput]);
     }
 
     /** Serialize txTo */
     template<typename S>
-    void Serialize(S &s, int nType, int nVersion) const {
+    void Serialize(S &s) const {
         // Serialize nVersion
-        ::Serialize(s, txTo.nVersion, nType, nVersion);
+        ::Serialize(s, txTo.nVersion);
         // Serialize vin
         unsigned int nInputs = fAnyoneCanPay ? 1 : txTo.vin.size();
         ::WriteCompactSize(s, nInputs);
         for (unsigned int nInput = 0; nInput < nInputs; nInput++)
-             SerializeInput(s, nInput, nType, nVersion);
+             SerializeInput(s, nInput);
         // Serialize vout
         unsigned int nOutputs = fHashNone ? 0 : (fHashSingle ? nIn+1 : txTo.vout.size());
         ::WriteCompactSize(s, nOutputs);
         for (unsigned int nOutput = 0; nOutput < nOutputs; nOutput++)
-             SerializeOutput(s, nOutput, nType, nVersion);
+             SerializeOutput(s, nOutput);
         // Serialize nLockTime
-        ::Serialize(s, txTo.nLockTime, nType, nVersion);
+        ::Serialize(s, txTo.nLockTime);
 
         // Serialize vjoinsplit
         if (txTo.nVersion >= 2) {
@@ -1051,24 +1058,207 @@ public:
             // keeps the JoinSplit cryptographically bound
             // to the transaction.
             //
-            ::Serialize(s, txTo.vjoinsplit, nType, nVersion);
+            ::Serialize(s, txTo.vjoinsplit);
             if (txTo.vjoinsplit.size() > 0) {
-                ::Serialize(s, txTo.joinSplitPubKey, nType, nVersion);
+                ::Serialize(s, txTo.joinSplitPubKey);
 
                 CTransaction::joinsplit_sig_t nullSig = {};
-                ::Serialize(s, nullSig, nType, nVersion);
+                ::Serialize(s, nullSig);
             }
         }
     }
 };
 
+const unsigned char ZCASH_PREVOUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','P','r','e','v','o','u','t','H','a','s','h'};
+const unsigned char ZCASH_SEQUENCE_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','S','e','q','u','e','n','c','H','a','s','h'};
+const unsigned char ZCASH_OUTPUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','O','u','t','p','u','t','s','H','a','s','h'};
+const unsigned char ZCASH_JOINSPLITS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','J','S','p','l','i','t','s','H','a','s','h'};
+const unsigned char ZCASH_SHIELDED_SPENDS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','S','S','p','e','n','d','s','H','a','s','h'};
+const unsigned char ZCASH_SHIELDED_OUTPUTS_HASH_PERSONALIZATION[crypto_generichash_blake2b_PERSONALBYTES] =
+    {'Z','c','a','s','h','S','O','u','t','p','u','t','H','a','s','h'};
+
+uint256 GetPrevoutHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_PREVOUTS_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+        ss << txTo.vin[n].prevout;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetSequenceHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_SEQUENCE_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vin.size(); n++) {
+        ss << txTo.vin[n].nSequence;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetOutputsHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_OUTPUTS_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vout.size(); n++) {
+        ss << txTo.vout[n];
+    }
+    return ss.GetHash();
+}
+
+uint256 GetJoinSplitsHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, static_cast<int>(txTo.GetHeader()), ZCASH_JOINSPLITS_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vjoinsplit.size(); n++) {
+        ss << txTo.vjoinsplit[n];
+    }
+    ss << txTo.joinSplitPubKey;
+    return ss.GetHash();
+}
+
+uint256 GetShieldedSpendsHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_SHIELDED_SPENDS_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vShieldedSpend.size(); n++) {
+        ss << txTo.vShieldedSpend[n].cv;
+        ss << txTo.vShieldedSpend[n].anchor;
+        ss << txTo.vShieldedSpend[n].nullifier;
+        ss << txTo.vShieldedSpend[n].rk;
+        ss << txTo.vShieldedSpend[n].zkproof;
+    }
+    return ss.GetHash();
+}
+
+uint256 GetShieldedOutputsHash(const CTransaction& txTo) {
+    CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_SHIELDED_OUTPUTS_HASH_PERSONALIZATION);
+    for (unsigned int n = 0; n < txTo.vShieldedOutput.size(); n++) {
+        ss << txTo.vShieldedOutput[n];
+    }
+    return ss.GetHash();
+}
+
 } // anon namespace
 
-uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsigned int nIn, int nHashType)
+PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo)
+{
+    hashPrevouts = GetPrevoutHash(txTo);
+    hashSequence = GetSequenceHash(txTo);
+    hashOutputs = GetOutputsHash(txTo);
+    hashJoinSplits = GetJoinSplitsHash(txTo);
+    hashShieldedSpends = GetShieldedSpendsHash(txTo);
+    hashShieldedOutputs = GetShieldedOutputsHash(txTo);
+}
+
+SigVersion SignatureHashVersion(const CTransaction& txTo)
+{
+    if (txTo.fOverwintered) {
+        if (txTo.nVersionGroupId == SAPLING_VERSION_GROUP_ID) {
+            return SIGVERSION_SAPLING;
+        } else {
+            return SIGVERSION_OVERWINTER;
+        }
+    } else {
+        return SIGVERSION_SPROUT;
+    }
+}
+
+uint256 SignatureHash(
+    const CScript& scriptCode,
+    const CTransaction& txTo,
+    unsigned int nIn,
+    int nHashType,
+    const CAmount& amount,
+    uint32_t consensusBranchId,
+    const PrecomputedTransactionData* cache)
 {
     if (nIn >= txTo.vin.size() && nIn != NOT_AN_INPUT) {
         //  nIn out of range
         throw logic_error("input index is out of range");
+    }
+
+    auto sigversion = SignatureHashVersion(txTo);
+
+    if (sigversion == SIGVERSION_OVERWINTER || sigversion == SIGVERSION_SAPLING) {
+        uint256 hashPrevouts;
+        uint256 hashSequence;
+        uint256 hashOutputs;
+        uint256 hashJoinSplits;
+        uint256 hashShieldedSpends;
+        uint256 hashShieldedOutputs;
+
+        if (!(nHashType & SIGHASH_ANYONECANPAY)) {
+            hashPrevouts = cache ? cache->hashPrevouts : GetPrevoutHash(txTo);
+        }
+
+        if (!(nHashType & SIGHASH_ANYONECANPAY) && (nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+            hashSequence = cache ? cache->hashSequence : GetSequenceHash(txTo);
+        }
+
+        if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
+            hashOutputs = cache ? cache->hashOutputs : GetOutputsHash(txTo);
+        } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
+            CBLAKE2bWriter ss(SER_GETHASH, 0, ZCASH_OUTPUTS_HASH_PERSONALIZATION);
+            ss << txTo.vout[nIn];
+            hashOutputs = ss.GetHash();
+        }
+
+        if (!txTo.vjoinsplit.empty()) {
+            hashJoinSplits = cache ? cache->hashJoinSplits : GetJoinSplitsHash(txTo);
+        }
+
+        if (!txTo.vShieldedSpend.empty()) {
+            hashShieldedSpends = cache ? cache->hashShieldedSpends : GetShieldedSpendsHash(txTo);
+        }
+
+        if (!txTo.vShieldedOutput.empty()) {
+            hashShieldedOutputs = cache ? cache->hashShieldedOutputs : GetShieldedOutputsHash(txTo);
+        }
+
+        uint32_t leConsensusBranchId = htole32(consensusBranchId);
+        unsigned char personalization[16] = {};
+        memcpy(personalization, "ZcashSigHash", 12);
+        memcpy(personalization+12, &leConsensusBranchId, 4);
+
+        CBLAKE2bWriter ss(SER_GETHASH, 0, personalization);
+        // Header
+        ss << txTo.GetHeader();
+        // Version group ID
+        ss << txTo.nVersionGroupId;
+        // Input prevouts/nSequence (none/all, depending on flags)
+        ss << hashPrevouts;
+        ss << hashSequence;
+        // Outputs (none/one/all, depending on flags)
+        ss << hashOutputs;
+        // JoinSplits
+        ss << hashJoinSplits;
+        if (sigversion == SIGVERSION_SAPLING) {
+            // Spend descriptions
+            ss << hashShieldedSpends;
+            // Output descriptions
+            ss << hashShieldedOutputs;
+        }
+        // Locktime
+        ss << txTo.nLockTime;
+        // Expiry height
+        ss << txTo.nExpiryHeight;
+        if (sigversion == SIGVERSION_SAPLING) {
+            // Sapling value balance
+            ss << txTo.valueBalance;
+        }
+        // Sighash type
+        ss << nHashType;
+
+        // If this hash is for a transparent input signature
+        // (i.e. not for txTo.joinSplitSig):
+        if (nIn != NOT_AN_INPUT){
+            // The input being signed (replacing the scriptSig with scriptCode + amount)
+            // The prevout may already be contained in hashPrevout, and the nSequence
+            // may already be contained in hashSequence.
+            ss << txTo.vin[nIn].prevout;
+            ss << static_cast<const CScriptBase&>(scriptCode);
+            ss << amount;
+            ss << txTo.vin[nIn].nSequence;
+        }
+
+        return ss.GetHash();
     }
 
     // Check for invalid use of SIGHASH_SINGLE
@@ -1088,12 +1278,17 @@ uint256 SignatureHash(const CScript& scriptCode, const CTransaction& txTo, unsig
     return ss.GetHash();
 }
 
-bool TransactionSignatureChecker::VerifySignature(const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
+bool TransactionSignatureChecker::VerifySignature(
+    const std::vector<unsigned char>& vchSig, const CPubKey& pubkey, const uint256& sighash) const
 {
     return pubkey.Verify(sighash, vchSig);
 }
 
-bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn, const vector<unsigned char>& vchPubKey, const CScript& scriptCode) const
+bool TransactionSignatureChecker::CheckSig(
+    const vector<unsigned char>& vchSigIn,
+    const vector<unsigned char>& vchPubKey,
+    const CScript& scriptCode,
+    uint32_t consensusBranchId) const
 {
     CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
@@ -1108,7 +1303,7 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
 
     uint256 sighash;
     try {
-        sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType);
+        sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, consensusBranchId, this->txdata);
     } catch (logic_error ex) {
         return false;
     }
@@ -1156,7 +1351,13 @@ bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) con
 }
 
 
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
+bool VerifyScript(
+    const CScript& scriptSig,
+    const CScript& scriptPubKey,
+    unsigned int flags,
+    const BaseSignatureChecker& checker,
+    uint32_t consensusBranchId,
+    ScriptError* serror)
 {
     set_error(serror, SCRIPT_ERR_UNKNOWN_ERROR);
 
@@ -1165,12 +1366,12 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
     }
 
     vector<vector<unsigned char> > stack, stackCopy;
-    if (!EvalScript(stack, scriptSig, flags, checker, serror))
+    if (!EvalScript(stack, scriptSig, flags, checker, consensusBranchId, serror))
         // serror is set
         return false;
     if (flags & SCRIPT_VERIFY_P2SH)
         stackCopy = stack;
-    if (!EvalScript(stack, scriptPubKey, flags, checker, serror))
+    if (!EvalScript(stack, scriptPubKey, flags, checker, consensusBranchId, serror))
         // serror is set
         return false;
     if (stack.empty())
@@ -1197,7 +1398,7 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigne
         CScript pubKey2(pubKeySerialized.begin(), pubKeySerialized.end());
         popstack(stack);
 
-        if (!EvalScript(stack, pubKey2, flags, checker, serror))
+        if (!EvalScript(stack, pubKey2, flags, checker, consensusBranchId, serror))
             // serror is set
             return false;
         if (stack.empty())

@@ -16,9 +16,7 @@
 
 #include "sodium.h"
 
-#ifdef ENABLE_RUST
 #include "librustzcash.h"
-#endif // ENABLE_RUST
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -83,8 +81,26 @@ unsigned int CalculateNextWorkRequired(arith_uint256 bnAvg,
 
 bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& params)
 {
-    unsigned int n = params.EquihashN();
-    unsigned int k = params.EquihashK();
+    // Derive n, k from the solution size as the block header does not specify parameters used.
+    // In the future, we could pass in the block height and call EquihashN() and EquihashK()
+    // to perform a contextual check against the parameters in use at a given block height.
+    unsigned int n, k;
+    size_t nSolSize = pblock->nSolution.size();
+    if (nSolSize == 1344) { // mainnet and testnet genesis
+        n = 200;
+        k = 9;
+    } else if (nSolSize == 36) { // regtest genesis
+        n = 48;
+        k = 5;
+    } else if (nSolSize == 100) {
+        n = 144;
+        k = 5;
+    } else if (nSolSize == 68) {
+        n = 96;
+        k = 5;
+    } else {
+        return error("%s: Unsupported solution size of %d", __func__, nSolSize);
+    }
 
     // Hash state
     crypto_generichash_blake2b_state state;
@@ -100,13 +116,11 @@ bool CheckEquihashSolution(const CBlockHeader *pblock, const CChainParams& param
     // H(I||V||...
     crypto_generichash_blake2b_update(&state, (unsigned char*)&ss[0], ss.size());
 
-    #ifdef ENABLE_RUST
     // Ensure that our Rust interactions are working in production builds. This is
     // temporary and should be removed.
     {
         assert(librustzcash_xor(0x0f0f0f0f0f0f0f0f, 0x1111111111111111) == 0x1e1e1e1e1e1e1e1e);
     }
-    #endif // ENABLE_RUST
 
     bool isValid;
     EhIsValidSolution(n, k, state, pblock->nSolution, isValid);

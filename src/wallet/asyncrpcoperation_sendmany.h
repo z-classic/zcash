@@ -7,7 +7,6 @@
 
 #include "asyncrpcoperation.h"
 #include "amount.h"
-#include "base58.h"
 #include "primitives/transaction.h"
 #include "zcash/JoinSplit.hpp"
 #include "zcash/Address.hpp"
@@ -31,14 +30,14 @@ typedef std::tuple<std::string, CAmount, std::string> SendManyRecipient;
 typedef std::tuple<uint256, int, CAmount, bool> SendManyInputUTXO;
 
 // Input JSOP is a tuple of JSOutpoint, note and amount
-typedef std::tuple<JSOutPoint, Note, CAmount> SendManyInputJSOP;
+typedef std::tuple<JSOutPoint, SproutNote, CAmount> SendManyInputJSOP;
 
 // Package of info which is passed to perform_joinsplit methods.
 struct AsyncJoinSplitInfo
 {
     std::vector<JSInput> vjsin;
     std::vector<JSOutput> vjsout;
-    std::vector<Note> notes;
+    std::vector<SproutNote> notes;
     CAmount vpub_old = 0;
     CAmount vpub_new = 0;
 };
@@ -51,7 +50,7 @@ struct WitnessAnchorData {
 
 class AsyncRPCOperation_sendmany : public AsyncRPCOperation {
 public:
-    AsyncRPCOperation_sendmany(std::string fromAddress, std::vector<SendManyRecipient> tOutputs, std::vector<SendManyRecipient> zOutputs, int minDepth, CAmount fee = ASYNC_RPC_OPERATION_DEFAULT_MINERS_FEE, UniValue contextInfo = NullUniValue);
+    AsyncRPCOperation_sendmany(CMutableTransaction contextualTx, std::string fromAddress, std::vector<SendManyRecipient> tOutputs, std::vector<SendManyRecipient> zOutputs, int minDepth, CAmount fee = ASYNC_RPC_OPERATION_DEFAULT_MINERS_FEE, UniValue contextInfo = NullUniValue);
     virtual ~AsyncRPCOperation_sendmany();
     
     // We don't want to be copied or moved around
@@ -73,12 +72,13 @@ private:
 
     UniValue contextinfo_;     // optional data to include in return value from getStatus()
 
+    uint32_t consensusBranchId_;
     CAmount fee_;
     int mindepth_;
     std::string fromaddress_;
     bool isfromtaddr_;
     bool isfromzaddr_;
-    CBitcoinAddress fromtaddr_;
+    CTxDestination fromtaddr_;
     PaymentAddress frompaymentaddress_;
     SpendingKey spendingkey_;
     

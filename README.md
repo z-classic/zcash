@@ -1,13 +1,15 @@
-Zclassic 1.0.14
+Zclassic 1.1.1
 ===============
 [![Twitter Follow](https://img.shields.io/twitter/follow/ZclassicDev.svg?style=social)](https://twitter.com/ZclassicDev)
 [![Tweet](https://img.shields.io/twitter/url/https/github.com/ZclassicDev/ZclassicDev.github.io/README.md.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20out%20Zclassic%20community's%20continuity%20plan%20-%20open%20to%20your%20feedback%20/%20suggestions:%20%F0%9F%A4%97%20%9C%A8%20https://github.com/ZclassicDev/ZclassicDev.github.io/README.md)
-[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/45NNrMJ) [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg?style=flat)](https://github.com/ZclassicDev/zclassic/releases)
+[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/45NNrMJ) [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg?style=flat)](https://github.com/ZclassicDev/zclassic/releases)<br/>
+OverWinter Upgrade with Equihash Parameters Modified and Initial Support for Sapling Upgrade Tests
 
-NOTICE, the default ports have changed!  P2P Port = **8033** and RPC Port = **8023**.
-* Windows and Linux binaries are available here: https://github.com/ZclassicDev/zclassic/releases
-* GUI / Swing Wallet UI is here: https://github.com/ZclassicDev/zclassic/blob/master/ZClassicSwingWalletUI.jar
-
+NOTICE, the default ports have changed!
+> MainNet: P2P port =  **8033** and RPC port =  **8023**. <br/>
+> TestNet: P2P port = **18033** and RPC port = **18023**.
+* Latest Windows and Linux binaries are available here: https://github.com/ZclassicDev/zclassic/releases
+* GUI / Swing Wallet UI is here: https://github.com/ZclassicDev/zclassic-full-node-wallet/releases <br/>
 
 What is Zclassic?
 -----------------
@@ -19,14 +21,15 @@ zk-SNARKs for transaction shielding. The major change - there is no 20%
 [founders' fee](https://blog.z.cash/funding/) taken for mining each block.
 More technical details are available in the [Zcash Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
 
-This software is the Zclassic client. It downloads and stores the entire history
-of Zclassic transactions; depending on the speed of your computer and network
-connection, the synchronization process could take a day or more once the
-blockchain has reached a significant size.
+This software is the Zclassic client. It downloads and stores the entire
+history of Zclassic transactions; depending on the speed of your computer
+and network connection, the synchronization process could take a day or
+more, once the blockchain has reached a significant size.
 
 Two main files of interest in this repo are `zcashd` and `zcash-cli`,
-which should be renamed to `zcld` and `zcl-cli` for use in the full-node wallet.
-The project needs to be built (per the instructions) in order to generate them.
+which should be renamed to `zcld` and `zcl-cli` for use in the full-node
+wallet. The project needs to be built (per the instructions) in order to
+generate them.
 
 Security Warnings
 -----------------
@@ -37,10 +40,10 @@ Zclassic and Zcash are **unfinished** and **highly experimental**. Use at your o
 
 Deprecation Policy
 ------------------
-This release is considered deprecated 16 weeks after the release day. There
-is an automatic deprecation shutdown feature which will halt the node some
-time after this 16 week time period. The automatic feature is based on block
-height and can be explicitly disabled.
+This release is considered deprecated 26 weeks after the release day.
+There is an automatic deprecation shutdown feature which will halt the node
+sometime after this 26-week time period. The automatic feature is based on
+block height and can be explicitly disabled in custom builds.
 
 Where do I begin?
 -----------------
@@ -55,9 +58,7 @@ and [request improvement **here**](https://github.com/ZclassicDev/zclassic/issue
 [pull request](https://github.com/ZclassicDev/zclassic/pulls)
 if you want to add something here.
 
-Participation in the Zclassic project is subject to
-a [Code of Conduct](code_of_conduct.md). This is based on
-the original Zcash Code of Conduct.
+Participation in the Zclassic project is subject to a [Code of Conduct](code_of_conduct.md). This is based on the original Zcash Code of Conduct.
 
 Join the conversation on
 [**Discord: Zclassic Community Edition** https://discord.gg/45NNrMJ](https://discord.gg/45NNrMJ).

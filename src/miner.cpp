@@ -9,14 +9,15 @@
 #endif
 
 #include "amount.h"
-#include "base58.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
+#include "consensus/upgrades.h"
 #include "consensus/validation.h"
 #ifdef ENABLE_MINING
 #include "crypto/equihash.h"
 #endif
 #include "hash.h"
+#include "key_io.h"
 #include "main.h"
 #include "metrics.h"
 #include "net.h"
@@ -143,9 +144,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
+        uint32_t consensusBranchId = CurrentEpochBranchId(nHeight, chainparams.GetConsensus());
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
         CCoinsViewCache view(pcoinsTip);
+
+        ZCSaplingIncrementalMerkleTree sapling_tree;
+        assert(view.GetSaplingAnchorAt(view.GetBestAnchor(SAPLING), sapling_tree));
 
         // Priority order to process transactions
         list<COrphan> vOrphan; // list memory doesn't move
@@ -155,16 +160,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // This vector will be sorted into a priority queue:
         vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
-        for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
+        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
-            const CTransaction& tx = mi->second.GetTx();
+            const CTransaction& tx = mi->GetTx();
 
             int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                                     ? nMedianTimePast
                                     : pblock->GetBlockTime();
 
-            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, nLockTimeCutoff))
+            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, nLockTimeCutoff) || IsExpiredTx(tx, nHeight))
                 continue;
 
             COrphan* porphan = NULL;
@@ -198,7 +203,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                    nTotalIn += mempool.mapTx.find(txin.prevout.hash)->GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
@@ -211,7 +216,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
                 dPriority += (double)nValueIn * nConf;
             }
-            nTotalIn += tx.GetJoinSplitValueIn();
+            nTotalIn += tx.GetShieldedValueIn();
 
             if (fMissingInputs) continue;
 
@@ -230,7 +235,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 porphan->feeRate = feeRate;
             }
             else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+                vecPriority.push_back(TxPriority(dPriority, feeRate, &(mi->GetTx())));
         }
 
         // Collect transactions into block
@@ -293,10 +298,15 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             // policy here, but we still have to ensure that the block we
             // create only contains transactions that are valid in new blocks.
             CValidationState state;
-            if (!ContextualCheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true, Params().GetConsensus()))
+            PrecomputedTransactionData txdata(tx);
+            if (!ContextualCheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true, txdata, Params().GetConsensus(), consensusBranchId))
                 continue;
 
-            UpdateCoins(tx, state, view, nHeight);
+            UpdateCoins(tx, view, nHeight);
+
+            BOOST_FOREACH(const OutputDescription &outDescription, tx.vShieldedOutput) {
+                sapling_tree.append(outDescription.cm);
+            }
 
             // Added
             pblock->vtx.push_back(tx);
@@ -336,12 +346,14 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Create coinbase tx
-        CMutableTransaction txNew;
+        CMutableTransaction txNew = CreateNewContextualCMutableTransaction(chainparams.GetConsensus(), nHeight);
         txNew.vin.resize(1);
         txNew.vin[0].prevout.SetNull();
         txNew.vout.resize(1);
         txNew.vout[0].scriptPubKey = scriptPubKeyIn;
         txNew.vout[0].nValue = GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+        // Set to 0 so expiry height does not apply to coinbase txs
+        txNew.nExpiryHeight = 0;
 
         // Add fees
         txNew.vout[0].nValue += nFees;
@@ -359,7 +371,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
 
         // Fill in header
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-        pblock->hashReserved   = uint256();
+        pblock->hashFinalSaplingRoot   = sapling_tree.root();
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
         pblock->nSolution.clear();
@@ -380,9 +392,9 @@ boost::optional<CScript> GetMinerScriptPubKey()
 #endif
 {
     CKeyID keyID;
-    CBitcoinAddress addr;
-    if (addr.SetString(GetArg("-mineraddress", ""))) {
-        addr.GetKeyID(keyID);
+    CTxDestination addr = DecodeDestination(GetArg("-mineraddress", ""));
+    if (IsValidDestination(addr)) {
+        keyID = boost::get<CKeyID>(addr);
     } else {
 #ifdef ENABLE_WALLET
         CPubKey pubkey;
@@ -499,12 +511,8 @@ void static BitcoinMiner()
     // Each thread has its own counter
     unsigned int nExtraNonce = 0;
 
-    unsigned int n = chainparams.EquihashN();
-    unsigned int k = chainparams.EquihashK();
-
     std::string solver = GetArg("-equihashsolver", "default");
     assert(solver == "tromp" || solver == "default");
-    LogPrint("pow", "Using Equihash solver \"%s\" with n = %u, k = %u\n", solver, n, k);
 
     std::mutex m_cs;
     bool cancelSolver = false;
@@ -539,7 +547,19 @@ void static BitcoinMiner()
             // Create new block
             //
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
-            CBlockIndex* pindexPrev = chainActive.Tip();
+
+            // Get the height of current tip
+            int nHeight = chainActive.Height();
+            if (nHeight == -1) {
+                LogPrintf("Error in ZcashMiner: chainActive.Height() returned -1\n");
+                return;
+            }
+            CBlockIndex* pindexPrev = chainActive[nHeight];
+
+            // Get equihash parameters for the next block to be mined.
+            unsigned int n = chainparams.EquihashN(nHeight + 1);
+            unsigned int k = chainparams.EquihashK(nHeight + 1);
+            LogPrint("pow", "Using Equihash solver \"%s\" with n = %u, k = %u\n", solver, n, k);
 
 #ifdef ENABLE_WALLET
             unique_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
@@ -643,7 +663,7 @@ void static BitcoinMiner()
                     equi eq(1);
                     eq.setstate(&curr_state);
 
-                    // Intialization done, start algo driver.
+                    // Initialization done, start algo driver.
                     eq.digit0(0);
                     eq.xfull = eq.bfull = eq.hfull = 0;
                     eq.showbsizes(0);

@@ -10,21 +10,25 @@
 #include <cstdlib>
 #include <cstring>
 #include <errno.h>
+#include <iomanip>
 #include <limits>
 
 using namespace std;
 
-string SanitizeString(const string& str)
+static const string CHARS_ALPHA_NUM = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+static const string SAFE_CHARS[] =
 {
-    /**
-     * safeChars chosen to allow simple messages/URLs/email addresses, but avoid anything
-     * even possibly remotely dangerous like & or >
-     */
-    static string safeChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890 .,;_/:?@()");
+    CHARS_ALPHA_NUM + " .,;_/:?@()", // SAFE_CHARS_DEFAULT
+    CHARS_ALPHA_NUM + " .,;_?@" // SAFE_CHARS_UA_COMMENT
+};
+
+string SanitizeString(const string& str, int rule)
+{
     string strResult;
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
-        if (safeChars.find(str[i]) != std::string::npos)
+        if (SAFE_CHARS[rule].find(str[i]) != std::string::npos)
             strResult.push_back(str[i]);
     }
     return strResult;
@@ -44,6 +48,20 @@ string SanitizeFilename(const string& str)
             strResult.push_back(str[i]);
     }
     return strResult;
+}
+
+std::string HexInt(uint32_t val)
+{
+    std::stringstream ss;
+    ss << std::setfill('0') << std::setw(sizeof(uint32_t) * 2) << std::hex << val;
+    return ss.str();
+}
+
+uint32_t ParseHexToUInt32(const std::string& str) {
+    std::istringstream converter(str);
+    uint32_t value;
+    converter >> std::hex >> value;
+    return value;
 }
 
 const signed char p_util_hexdigit[256] =

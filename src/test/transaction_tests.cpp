@@ -8,6 +8,8 @@
 
 #include "init.h"
 #include "clientversion.h"
+#include "checkqueue.h"
+#include "consensus/upgrades.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "key.h"
@@ -15,6 +17,7 @@
 #include "main.h"
 #include "script/script.h"
 #include "script/script_error.h"
+#include "script/sign.h"
 #include "primitives/transaction.h"
 
 #include "sodium.h"
@@ -27,6 +30,7 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/assign/list_of.hpp>
+#include <boost/test/data/test_case.hpp>
 
 #include <univalue.h>
 
@@ -90,6 +94,8 @@ BOOST_FIXTURE_TEST_SUITE(transaction_tests, JoinSplitTestingSetup)
 
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
+    uint32_t consensusBranchId = SPROUT_BRANCH_ID;
+
     // Read tests from test/data/tx_valid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
@@ -147,6 +153,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             BOOST_CHECK_MESSAGE(CheckTransaction(tx, state, verifier), strTest + comment);
             BOOST_CHECK_MESSAGE(state.IsValid(), comment);
 
+            PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size(); i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
@@ -155,9 +162,10 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
 
+                CAmount amount = 0;
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 verify_flags, TransactionSignatureChecker(&tx, i), &err),
+                                                 verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), consensusBranchId, &err),
                                     strTest + comment);
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err) + comment);
             }
@@ -174,6 +182,8 @@ BOOST_AUTO_TEST_CASE(tx_valid)
 
 BOOST_AUTO_TEST_CASE(tx_invalid)
 {
+    uint32_t consensusBranchId = SPROUT_BRANCH_ID;
+
     // Read tests from test/data/tx_invalid.json
     // Format is an array of arrays
     // Inner arrays are either [ "comment" ]
@@ -230,6 +240,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             CValidationState state;
             fValid = CheckTransaction(tx, state, verifier) && state.IsValid();
 
+            PrecomputedTransactionData txdata(tx);
             for (unsigned int i = 0; i < tx.vin.size() && fValid; i++)
             {
                 if (!mapprevOutScriptPubKeys.count(tx.vin[i].prevout))
@@ -239,8 +250,9 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                 }
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                CAmount amount = 0;
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      verify_flags, TransactionSignatureChecker(&tx, i), &err);
+                                      verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), consensusBranchId, &err);
             }
             BOOST_CHECK_MESSAGE(!fValid, strTest + comment);
             BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err) + comment);
@@ -330,10 +342,10 @@ BOOST_AUTO_TEST_CASE(test_basic_joinsplit_verification)
     // construct a merkle tree
     ZCIncrementalMerkleTree merkleTree;
 
-    libzcash::SpendingKey k = libzcash::SpendingKey::random();
-    libzcash::PaymentAddress addr = k.address();
+    auto k = libzcash::SproutSpendingKey::random();
+    auto addr = k.address();
 
-    libzcash::Note note(addr.a_pk, 100, uint256(), uint256());
+    libzcash::SproutNote note(addr.a_pk, 100, uint256(), uint256());
 
     // commitment from coin
     uint256 commitment = note.cm();
@@ -360,7 +372,7 @@ BOOST_AUTO_TEST_CASE(test_basic_joinsplit_verification)
     auto verifier = libzcash::ProofVerifier::Strict();
 
     {
-        JSDescription jsdesc(*pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 0);
+        JSDescription jsdesc(false, *pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 0);
         BOOST_CHECK(jsdesc.Verify(*pzcashParams, verifier, pubKeyHash));
 
         CDataStream ss(SER_DISK, CLIENT_VERSION);
@@ -375,23 +387,84 @@ BOOST_AUTO_TEST_CASE(test_basic_joinsplit_verification)
 
     {
         // Ensure that the balance equation is working.
-        BOOST_CHECK_THROW(JSDescription(*pzcashParams, pubKeyHash, rt, inputs, outputs, 10, 0), std::invalid_argument);
-        BOOST_CHECK_THROW(JSDescription(*pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 10), std::invalid_argument);
+        BOOST_CHECK_THROW(JSDescription(false, *pzcashParams, pubKeyHash, rt, inputs, outputs, 10, 0), std::invalid_argument);
+        BOOST_CHECK_THROW(JSDescription(false, *pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 10), std::invalid_argument);
     }
 
     {
         // Ensure that it won't verify if the root is changed.
-        auto test = JSDescription(*pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 0);
+        auto test = JSDescription(false, *pzcashParams, pubKeyHash, rt, inputs, outputs, 0, 0);
         test.anchor = GetRandHash();
         BOOST_CHECK(!test.Verify(*pzcashParams, verifier, pubKeyHash));
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_simple_joinsplit_invalidity)
+void test_simple_sapling_invalidity(uint32_t consensusBranchId, CMutableTransaction tx)
+{
+    {
+        CMutableTransaction newTx(tx);
+        CValidationState state;
+
+        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(state.GetRejectReason() == "bad-txns-vin-empty");
+    }
+    {
+        CMutableTransaction newTx(tx);
+        CValidationState state;
+
+        newTx.vShieldedSpend.push_back(SpendDescription());
+        newTx.vShieldedSpend[0].nullifier = GetRandHash();
+
+        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(state.GetRejectReason() == "bad-txns-vout-empty");
+    }
+    {
+        // Ensure that nullifiers are never duplicated within a transaction.
+        CMutableTransaction newTx(tx);
+        CValidationState state;
+
+        newTx.vShieldedSpend.push_back(SpendDescription());
+        newTx.vShieldedSpend[0].nullifier = GetRandHash();
+
+        newTx.vShieldedOutput.push_back(OutputDescription());
+
+        newTx.vShieldedSpend.push_back(SpendDescription());
+        newTx.vShieldedSpend[1].nullifier = newTx.vShieldedSpend[0].nullifier;
+
+        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(state.GetRejectReason() == "bad-spend-description-nullifiers-duplicate");
+
+        newTx.vShieldedSpend[1].nullifier = GetRandHash();
+
+        BOOST_CHECK(CheckTransactionWithoutProofVerification(newTx, state));
+    }
+    {
+        CMutableTransaction newTx(tx);
+        CValidationState state;
+
+        // Create a coinbase transaction
+        CTxIn vin;
+        vin.prevout = COutPoint();
+        newTx.vin.push_back(vin);
+        CTxOut vout;
+        vout.nValue = 1;
+        newTx.vout.push_back(vout);
+
+        newTx.vShieldedOutput.push_back(OutputDescription());
+
+        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(state.GetRejectReason() == "bad-cb-has-output-description");
+
+        newTx.vShieldedSpend.push_back(SpendDescription());
+
+        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(state.GetRejectReason() == "bad-cb-has-spend-description");
+    }
+}
+
+void test_simple_joinsplit_invalidity(uint32_t consensusBranchId, CMutableTransaction tx)
 {
     auto verifier = libzcash::ProofVerifier::Strict();
-    CMutableTransaction tx;
-    tx.nVersion = 2;
     {
         // Ensure that empty vin/vout remain invalid without
         // joinsplits.
@@ -416,13 +489,14 @@ BOOST_AUTO_TEST_CASE(test_simple_joinsplit_invalidity)
         jsdesc->nullifiers[0] = GetRandHash();
         jsdesc->nullifiers[1] = GetRandHash();
 
-        BOOST_CHECK(!CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(!ContextualCheckTransaction(newTx, state, 0, 100));
         BOOST_CHECK(state.GetRejectReason() == "bad-txns-invalid-joinsplit-signature");
 
         // Empty output script.
         CScript scriptCode;
         CTransaction signTx(newTx);
-        uint256 dataToBeSigned = SignatureHash(scriptCode, signTx, NOT_AN_INPUT, SIGHASH_ALL);
+        uint256 dataToBeSigned = SignatureHash(scriptCode, signTx, NOT_AN_INPUT, SIGHASH_ALL, 0, consensusBranchId);
 
         assert(crypto_sign_detached(&newTx.joinSplitSig[0], NULL,
                                     dataToBeSigned.begin(), 32,
@@ -430,6 +504,7 @@ BOOST_AUTO_TEST_CASE(test_simple_joinsplit_invalidity)
                                     ) == 0);
 
         BOOST_CHECK(CheckTransactionWithoutProofVerification(newTx, state));
+        BOOST_CHECK(ContextualCheckTransaction(newTx, state, 0, 100));
     }
     {
         // Ensure that values within the joinsplit are well-formed.
@@ -517,8 +592,43 @@ BOOST_AUTO_TEST_CASE(test_simple_joinsplit_invalidity)
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_Get)
+BOOST_AUTO_TEST_CASE(test_simple_joinsplit_invalidity_driver) {
+    {
+        CMutableTransaction mtx;
+        mtx.nVersion = 2;
+        test_simple_joinsplit_invalidity(SPROUT_BRANCH_ID, mtx);
+    }
+    {
+        // Switch to regtest parameters so we can activate Overwinter
+        SelectParams(CBaseChainParams::REGTEST);
+
+        CMutableTransaction mtx;
+        mtx.fOverwintered = true;
+        mtx.nVersionGroupId = OVERWINTER_VERSION_GROUP_ID;
+        mtx.nVersion = OVERWINTER_TX_VERSION;
+
+        UpdateNetworkUpgradeParameters(Consensus::UPGRADE_OVERWINTER, Consensus::NetworkUpgrade::ALWAYS_ACTIVE);
+        test_simple_joinsplit_invalidity(NetworkUpgradeInfo[Consensus::UPGRADE_OVERWINTER].nBranchId, mtx);
+        UpdateNetworkUpgradeParameters(Consensus::UPGRADE_OVERWINTER, Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT);
+
+        // Test Sapling things
+        mtx.nVersionGroupId = SAPLING_VERSION_GROUP_ID;
+        mtx.nVersion = SAPLING_TX_VERSION;
+
+        UpdateNetworkUpgradeParameters(Consensus::UPGRADE_SAPLING, Consensus::NetworkUpgrade::ALWAYS_ACTIVE);
+        test_simple_sapling_invalidity(NetworkUpgradeInfo[Consensus::UPGRADE_SAPLING].nBranchId, mtx);
+        UpdateNetworkUpgradeParameters(Consensus::UPGRADE_SAPLING, Consensus::NetworkUpgrade::NO_ACTIVATION_HEIGHT);
+
+        // Switch back to mainnet parameters as originally selected in test fixture
+        SelectParams(CBaseChainParams::MAIN);
+    }
+}
+
+// Parameterized testing over consensus branch ids
+BOOST_DATA_TEST_CASE(test_Get, boost::unit_test::data::xrange(static_cast<int>(Consensus::MAX_NETWORK_UPGRADES)))
 {
+    uint32_t consensusBranchId = NetworkUpgradeInfo[sample].nBranchId;
+
     CBasicKeyStore keystore;
     CCoinsView coinsDummy;
     CCoinsViewCache coins(&coinsDummy);
@@ -539,16 +649,99 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(AreInputsStandard(t1, coins));
+    BOOST_CHECK(AreInputsStandard(t1, coins, consensusBranchId));
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
 
     // Adding extra junk to the scriptSig should make it non-standard:
     t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!AreInputsStandard(t1, coins, consensusBranchId));
 
     // ... as should not having enough:
     t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
+    BOOST_CHECK(!AreInputsStandard(t1, coins, consensusBranchId));
+}
+
+BOOST_AUTO_TEST_CASE(test_big_overwinter_transaction) {
+    uint32_t consensusBranchId = NetworkUpgradeInfo[Consensus::UPGRADE_OVERWINTER].nBranchId;
+    CMutableTransaction mtx;
+    mtx.fOverwintered = true;
+    mtx.nVersion = OVERWINTER_TX_VERSION;
+    mtx.nVersionGroupId = OVERWINTER_VERSION_GROUP_ID;
+
+    CKey key;
+    key.MakeNewKey(false);
+    CBasicKeyStore keystore;
+    keystore.AddKeyPubKey(key, key.GetPubKey());
+    CKeyID hash = key.GetPubKey().GetID();
+    CScript scriptPubKey = GetScriptForDestination(hash);
+
+    vector<int> sigHashes;
+    sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_ALL | SIGHASH_ANYONECANPAY);
+    sigHashes.push_back(SIGHASH_NONE);
+    sigHashes.push_back(SIGHASH_SINGLE);
+    sigHashes.push_back(SIGHASH_ALL);
+
+    // create a big transaction of 4500 inputs signed by the same key
+    for(uint32_t ij = 0; ij < 4500; ij++) {
+        uint32_t i = mtx.vin.size();
+        uint256 prevId;
+        prevId.SetHex("0000000000000000000000000000000000000000000000000000000000000100");
+        COutPoint outpoint(prevId, i);
+
+        mtx.vin.resize(mtx.vin.size() + 1);
+        mtx.vin[i].prevout = outpoint;
+        mtx.vin[i].scriptSig = CScript();
+
+        mtx.vout.resize(mtx.vout.size() + 1);
+        mtx.vout[i].nValue = 1000;
+        mtx.vout[i].scriptPubKey = CScript() << OP_1;
+    }
+
+    // sign all inputs
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        bool hashSigned = SignSignature(keystore, scriptPubKey, mtx, i, 1000, sigHashes.at(i % sigHashes.size()), consensusBranchId);
+        assert(hashSigned);
+    }
+
+    CTransaction tx;
+    CDataStream ssout(SER_NETWORK, PROTOCOL_VERSION);
+    ssout << mtx;
+    ssout >> tx;
+
+    // check all inputs concurrently, with the cache
+    PrecomputedTransactionData txdata(tx);
+    boost::thread_group threadGroup;
+    CCheckQueue<CScriptCheck> scriptcheckqueue(128);
+    CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
+
+    for (int i=0; i<20; i++)
+        threadGroup.create_thread(boost::bind(&CCheckQueue<CScriptCheck>::Thread, boost::ref(scriptcheckqueue)));
+
+    CCoins coins;
+    coins.nVersion = 1;
+    coins.fCoinBase = false;
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        CTxOut txout;
+        txout.nValue = 1000;
+        txout.scriptPubKey = scriptPubKey;
+        coins.vout.push_back(txout);
+    }
+
+    for(uint32_t i = 0; i < mtx.vin.size(); i++) {
+        std::vector<CScriptCheck> vChecks;
+        CScriptCheck check(coins, tx, i, SCRIPT_VERIFY_P2SH, false, consensusBranchId, &txdata);
+        vChecks.push_back(CScriptCheck());
+        check.swap(vChecks.back());
+        control.Add(vChecks);
+    }
+
+    bool controlCheck = control.Wait();
+    assert(controlCheck);
+
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)

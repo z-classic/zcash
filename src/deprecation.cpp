@@ -4,14 +4,21 @@
 
 #include "deprecation.h"
 
+#include "alert.h"
 #include "clientversion.h"
 #include "init.h"
 #include "ui_interface.h"
 #include "util.h"
+#include "chainparams.h"
 
 static const std::string CLIENT_VERSION_STR = FormatVersion(CLIENT_VERSION);
 
-void EnforceNodeDeprecation(int nHeight, bool forceLogging) {
+void EnforceNodeDeprecation(int nHeight, bool forceLogging, bool fThread) {
+
+    // Do not enforce deprecation in regtest or on testnet
+    std::string networkID = Params().NetworkIDString();
+    if (networkID != "main") return;
+
     int blocksToDeprecation = DEPRECATION_HEIGHT - nHeight;
     bool disableDeprecation = (GetArg("-disabledeprecation", "") == CLIENT_VERSION_STR);
     if (blocksToDeprecation <= 0) {
@@ -26,10 +33,11 @@ void EnforceNodeDeprecation(int nHeight, bool forceLogging) {
                                  DEPRECATION_HEIGHT) + " " +
                        _("You should upgrade to the latest version of Zcash.");
             if (!disableDeprecation) {
-                msg += " " + strprintf(_("To disable deprecation for this version, set %s%s."),
-                                       "-disabledeprecation=", CLIENT_VERSION_STR);
+                msg += " " + strprintf(_("To disable deprecation for this version, set '%s' to '%s'."),
+                                       "disabledeprecation", CLIENT_VERSION_STR);
             }
             LogPrintf("*** %s\n", msg);
+            CAlert::Notify(msg, fThread);
             uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_ERROR);
         }
         if (!disableDeprecation) {
@@ -46,10 +54,11 @@ void EnforceNodeDeprecation(int nHeight, bool forceLogging) {
             msg = strprintf(_("This version will be deprecated at block height %d, and will automatically shut down."),
                             DEPRECATION_HEIGHT) + " " +
                   _("You should upgrade to the latest version of Zcash.") + " " +
-                  strprintf(_("To disable deprecation for this version, set %s%s."),
-                            "-disabledeprecation=", CLIENT_VERSION_STR);
+                  strprintf(_("To disable deprecation for this version, set '%s' to '%s'."),
+                            "disabledeprecation", CLIENT_VERSION_STR);
         }
         LogPrintf("*** %s\n", msg);
+        CAlert::Notify(msg, fThread);
         uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_WARNING);
     }
 }
