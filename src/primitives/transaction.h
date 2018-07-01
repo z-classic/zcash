@@ -14,7 +14,8 @@
 #include "uint256.h"
 #include "consensus/consensus.h"
 
-#include <boost/array.hpp>
+#include <array>
+
 #include <boost/variant.hpp>
 
 #include "zcash/NoteEncryption.hpp"
@@ -42,7 +43,7 @@ static_assert(SAPLING_TX_VERSION <= SAPLING_MAX_TX_VERSION,
 class SpendDescription
 {
 public:
-    typedef boost::array<unsigned char, 64> spend_auth_sig_t;
+    typedef std::array<unsigned char, 64> spend_auth_sig_t;
 
     uint256 cv;                    //!< A value commitment to the value of the input note.
     uint256 anchor;                //!< A Merkle root of the Sapling note commitment tree at some block height in the past.
@@ -102,8 +103,8 @@ static constexpr size_t SAPLING_OUT_CIPHERTEXT_SIZE = (
 class OutputDescription
 {
 public:
-    typedef boost::array<unsigned char, SAPLING_ENC_CIPHERTEXT_SIZE> sapling_enc_ct_t; // TODO: Replace with actual type
-    typedef boost::array<unsigned char, SAPLING_OUT_CIPHERTEXT_SIZE> sapling_out_ct_t; // TODO: Replace with actual type
+    typedef std::array<unsigned char, SAPLING_ENC_CIPHERTEXT_SIZE> sapling_enc_ct_t; // TODO: Replace with actual type
+    typedef std::array<unsigned char, SAPLING_OUT_CIPHERTEXT_SIZE> sapling_out_ct_t; // TODO: Replace with actual type
 
     uint256 cv;                     //!< A value commitment to the value of the output note.
     uint256 cm;                     //!< The note commitment for the output note.
@@ -153,7 +154,7 @@ class SproutProofSerializer : public boost::static_visitor<>
 public:
     SproutProofSerializer(Stream& s, bool useGroth) : s(s), useGroth(useGroth) {}
 
-    void operator()(const libzcash::ZCProof& proof) const
+    void operator()(const libzcash::PHGRProof& proof) const
     {
         if (useGroth) {
             throw std::ios_base::failure("Invalid Sprout proof for transaction format (expected GrothProof, found PHGRProof)");
@@ -185,7 +186,7 @@ inline void SerReadWriteSproutProof(Stream& s, T& proof, bool useGroth, CSerActi
         ::Unserialize(s, grothProof);
         proof = grothProof;
     } else {
-        libzcash::ZCProof pghrProof;
+        libzcash::PHGRProof pghrProof;
         ::Unserialize(s, pghrProof);
         proof = pghrProof;
     }
@@ -209,14 +210,14 @@ public:
     // are derived from the secrets placed in the note
     // and the secret spend-authority key known by the
     // spender.
-    boost::array<uint256, ZC_NUM_JS_INPUTS> nullifiers;
+    std::array<uint256, ZC_NUM_JS_INPUTS> nullifiers;
 
     // Note commitments are introduced into the commitment
     // tree, blinding the public about the values and
     // destinations involved in the JoinSplit. The presence of
     // a commitment in the note commitment tree is required
     // to spend it.
-    boost::array<uint256, ZC_NUM_JS_OUTPUTS> commitments;
+    std::array<uint256, ZC_NUM_JS_OUTPUTS> commitments;
 
     // Ephemeral key
     uint256 ephemeralKey;
@@ -225,7 +226,7 @@ public:
     // These contain trapdoors, values and other information
     // that the recipient needs, including a memo field. It
     // is encrypted using the scheme implemented in crypto/NoteEncryption.cpp
-    boost::array<ZCNoteEncryption::Ciphertext, ZC_NUM_JS_OUTPUTS> ciphertexts = {{ {{0}} }};
+    std::array<ZCNoteEncryption::Ciphertext, ZC_NUM_JS_OUTPUTS> ciphertexts = {{ {{0}} }};
 
     // Random seed
     uint256 randomSeed;
@@ -233,7 +234,7 @@ public:
     // MACs
     // The verification of the JoinSplit requires these MACs
     // to be provided as an input.
-    boost::array<uint256, ZC_NUM_JS_INPUTS> macs;
+    std::array<uint256, ZC_NUM_JS_INPUTS> macs;
 
     // JoinSplit proof
     // This is a zk-SNARK which ensures that this JoinSplit is valid.
@@ -244,10 +245,10 @@ public:
     JSDescription(
             bool makeGrothProof,
             ZCJoinSplit& params,
-            const uint256& pubKeyHash,
+            const uint256& joinSplitPubKey,
             const uint256& rt,
-            const boost::array<libzcash::JSInput, ZC_NUM_JS_INPUTS>& inputs,
-            const boost::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
+            const std::array<libzcash::JSInput, ZC_NUM_JS_INPUTS>& inputs,
+            const std::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
             CAmount vpub_old,
             CAmount vpub_new,
             bool computeProof = true, // Set to false in some tests
@@ -257,12 +258,12 @@ public:
     static JSDescription Randomized(
             bool makeGrothProof,
             ZCJoinSplit& params,
-            const uint256& pubKeyHash,
+            const uint256& joinSplitPubKey,
             const uint256& rt,
-            boost::array<libzcash::JSInput, ZC_NUM_JS_INPUTS>& inputs,
-            boost::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
-            boost::array<size_t, ZC_NUM_JS_INPUTS>& inputMap,
-            boost::array<size_t, ZC_NUM_JS_OUTPUTS>& outputMap,
+            std::array<libzcash::JSInput, ZC_NUM_JS_INPUTS>& inputs,
+            std::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
+            std::array<size_t, ZC_NUM_JS_INPUTS>& inputMap,
+            std::array<size_t, ZC_NUM_JS_OUTPUTS>& outputMap,
             CAmount vpub_old,
             CAmount vpub_new,
             bool computeProof = true, // Set to false in some tests
@@ -274,11 +275,11 @@ public:
     bool Verify(
         ZCJoinSplit& params,
         libzcash::ProofVerifier& verifier,
-        const uint256& pubKeyHash
+        const uint256& joinSplitPubKey
     ) const;
 
     // Returns the calculated h_sig
-    uint256 h_sig(ZCJoinSplit& params, const uint256& pubKeyHash) const;
+    uint256 h_sig(ZCJoinSplit& params, const uint256& joinSplitPubKey) const;
 
     ADD_SERIALIZE_METHODS;
 
@@ -511,8 +512,8 @@ protected:
     CTransaction(const CMutableTransaction &tx, bool evilDeveloperFlag);
 
 public:
-    typedef boost::array<unsigned char, 64> joinsplit_sig_t;
-    typedef boost::array<unsigned char, 64> binding_sig_t;
+    typedef std::array<unsigned char, 64> joinsplit_sig_t;
+    typedef std::array<unsigned char, 64> binding_sig_t;
 
     // Transactions that include a list of JoinSplits are >= version 2.
     static const int32_t SPROUT_MIN_CURRENT_VERSION = 1;

@@ -39,7 +39,8 @@ JSON_TEST_FILES = \
   test/data/merkle_path_sapling.json \
   test/data/merkle_commitments_sapling.json \
   test/data/g1_compressed.json \
-  test/data/g2_compressed.json
+  test/data/g2_compressed.json \
+  test/data/sapling_key_components.json
 
 RAW_TEST_FILES = test/data/alertTests.raw
 
@@ -61,6 +62,7 @@ BITCOIN_TESTS =\
   test/Checkpoints_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
+  test/convertbits_tests.cpp \
   test/crypto_tests.cpp \
   test/DoS_tests.cpp \
   test/equihash_tests.cpp \
