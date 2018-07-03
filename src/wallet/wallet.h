@@ -161,12 +161,6 @@ public:
     uint256 hash;
     // Index into CTransaction.vjoinsplit
     uint64_t js;
-    #else
-    size_t js;
-    #endif
-=======
-    uint64_t js;
->>>>>>> pr/6
     // Index into JSDescription fields of length ZC_NUM_JS_OUTPUTS
     uint8_t n;
 
