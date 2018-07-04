@@ -1,5 +1,5 @@
 #!/bin/sh
-# postinst script for zcash
+# postinst script for zclassic
 #
 # see: dh_installdeb(1)
 

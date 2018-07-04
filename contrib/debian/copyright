@@ -1,15 +1,17 @@
 Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
-Upstream-Name: Zcash
-Upstream-Contact: Zcash Company <team@z.cash>
-Source: https://github.com/zcash/zcash
+Upstream-Name: Zclassic
+Upstream-Contact: Zclassic Community <team@zclassic-ce.org>
+Source: https://github.com/ZclassicDev/zclassic
 
 Files: *
-Copyright: 2016-2017, The Zcash developers
+Copyright: 2016-2018, The Zcash developers
  2009-2017, Bitcoin Core developers
+ 2018 Zclassic developers
 License: Expat
 Comment: The Bitcoin Core developers encompasses the current developers listed on bitcoin.org,
  as well as the numerous contributors to the project.
  The Zcash developers are listed at https://z.cash/team.html.
+ Zclassic developers are listed at http://zclassic-ce.org/team.
 
 Files: depends/sources/libsodium-*.tar.gz
 Copyright: 2013-2016 Frank Denis
