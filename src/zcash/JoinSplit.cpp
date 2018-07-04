@@ -102,13 +102,13 @@ public:
     }
 
     bool verify(
-        const ZCProof& proof,
+        const PHGRProof& proof,
         ProofVerifier& verifier,
-        const uint256& pubKeyHash,
+        const uint256& joinSplitPubKey,
         const uint256& randomSeed,
-        const boost::array<uint256, NumInputs>& macs,
-        const boost::array<uint256, NumInputs>& nullifiers,
-        const boost::array<uint256, NumOutputs>& commitments,
+        const std::array<uint256, NumInputs>& macs,
+        const std::array<uint256, NumInputs>& nullifiers,
+        const std::array<uint256, NumOutputs>& commitments,
         uint64_t vpub_old,
         uint64_t vpub_new,
         const uint256& rt
@@ -116,7 +116,7 @@ public:
         try {
             auto r1cs_proof = proof.to_libsnark_proof<r1cs_ppzksnark_proof<ppzksnark_ppT>>();
 
-            uint256 h_sig = this->h_sig(randomSeed, nullifiers, pubKeyHash);
+            uint256 h_sig = this->h_sig(randomSeed, nullifiers, joinSplitPubKey);
 
             auto witness = joinsplit_gadget<FieldT, NumInputs, NumOutputs>::witness_map(
                 rt,
@@ -141,16 +141,16 @@ public:
 
     SproutProof prove(
         bool makeGrothProof,
-        const boost::array<JSInput, NumInputs>& inputs,
-        const boost::array<JSOutput, NumOutputs>& outputs,
-        boost::array<SproutNote, NumOutputs>& out_notes,
-        boost::array<ZCNoteEncryption::Ciphertext, NumOutputs>& out_ciphertexts,
+        const std::array<JSInput, NumInputs>& inputs,
+        const std::array<JSOutput, NumOutputs>& outputs,
+        std::array<SproutNote, NumOutputs>& out_notes,
+        std::array<ZCNoteEncryption::Ciphertext, NumOutputs>& out_ciphertexts,
         uint256& out_ephemeralKey,
-        const uint256& pubKeyHash,
+        const uint256& joinSplitPubKey,
         uint256& out_randomSeed,
-        boost::array<uint256, NumInputs>& out_macs,
-        boost::array<uint256, NumInputs>& out_nullifiers,
-        boost::array<uint256, NumOutputs>& out_commitments,
+        std::array<uint256, NumInputs>& out_macs,
+        std::array<uint256, NumInputs>& out_nullifiers,
+        std::array<uint256, NumOutputs>& out_commitments,
         uint64_t vpub_old,
         uint64_t vpub_new,
         const uint256& rt,
@@ -209,7 +209,7 @@ public:
         out_randomSeed = random_uint256();
 
         // Compute h_sig
-        uint256 h_sig = this->h_sig(out_randomSeed, out_nullifiers, pubKeyHash);
+        uint256 h_sig = this->h_sig(out_randomSeed, out_nullifiers, joinSplitPubKey);
 
         // Sample phi
         uint252 phi = random_uint252();
@@ -321,7 +321,7 @@ public:
         }
 
         if (!computeProof) {
-            return ZCProof();
+            return PHGRProof();
         }
 
         protoboard<FieldT> pb;
@@ -359,7 +359,7 @@ public:
             throw std::runtime_error(strprintf("could not load param file at %s", pkPath));
         }
 
-        return ZCProof(r1cs_ppzksnark_prover_streaming<ppzksnark_ppT>(
+        return PHGRProof(r1cs_ppzksnark_prover_streaming<ppzksnark_ppT>(
             fh,
             primary_input,
             aux_input,
@@ -388,8 +388,8 @@ JoinSplit<NumInputs, NumOutputs>* JoinSplit<NumInputs, NumOutputs>::Prepared(con
 template<size_t NumInputs, size_t NumOutputs>
 uint256 JoinSplit<NumInputs, NumOutputs>::h_sig(
     const uint256& randomSeed,
-    const boost::array<uint256, NumInputs>& nullifiers,
-    const uint256& pubKeyHash
+    const std::array<uint256, NumInputs>& nullifiers,
+    const uint256& joinSplitPubKey
 ) {
     const unsigned char personalization[crypto_generichash_blake2b_PERSONALBYTES]
         = {'Z','c','a','s','h','C','o','m','p','u','t','e','h','S','i','g'};
@@ -400,7 +400,7 @@ uint256 JoinSplit<NumInputs, NumOutputs>::h_sig(
         block.insert(block.end(), nullifiers[i].begin(), nullifiers[i].end());
     }
 
-    block.insert(block.end(), pubKeyHash.begin(), pubKeyHash.end());
+    block.insert(block.end(), joinSplitPubKey.begin(), joinSplitPubKey.end());
 
     uint256 output;
 

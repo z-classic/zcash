@@ -519,14 +519,14 @@ UniValue signmessage(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "signmessage \"zcashaddress\" \"message\"\n"
-            "\nSign a message with the private key of an address"
+            "signmessage \"t-addr\" \"message\"\n"
+            "\nSign a message with the private key of a t-addr"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"zcashaddress\"  (string, required) The Zclassic address to use for the private key.\n"
-            "2. \"message\"         (string, required) The message to create a signature of.\n"
+            "1. \"t-addr\"       (string, required) The transparent address to use for the private key.\n"
+            "2. \"message\"      (string, required) The message to create a signature of.\n"
             "\nResult:\n"
-            "\"signature\"          (string) The signature of the message encoded in base 64\n"
+            "\"signature\"       (string) The signature of the message encoded in base 64\n"
             "\nExamples:\n"
             "\nUnlock the wallet for 30 seconds\n"
             + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
@@ -2633,11 +2633,11 @@ UniValue zc_sample_joinsplit(const UniValue& params, bool fHelp)
 
     LOCK(cs_main);
 
-    uint256 pubKeyHash;
+    uint256 joinSplitPubKey;
     uint256 anchor = ZCIncrementalMerkleTree().root();
     JSDescription samplejoinsplit(true,
                                   *pzcashParams,
-                                  pubKeyHash,
+                                  joinSplitPubKey,
                                   anchor,
                                   {JSInput(), JSInput()},
                                   {JSOutput(), JSOutput()},
