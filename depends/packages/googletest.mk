@@ -5,6 +5,17 @@ $(package)_file_name=$(package)-$($(package)_version).tar.gz
 $(package)_download_file=release-$($(package)_version).tar.gz
 $(package)_sha256_hash=58a6f4277ca2bc8565222b3bbd58a177609e9c488e8a72649359ba51450db7d8
 
+define $(package)_set_vars
+    $(package)_build_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)" CXX="$($(package)_cxx)" CXXFLAGS="$($(package)_cxxflags)"
+endef
+
+BUILD_OS := $(shell uname)
+ifeq ($(BUILD_OS),Darwin)
+    $(package)_install=ginstall
+else
+    $(package)_install=install
+endif
+
 define $(package)_build_cmds
   $(MAKE) -C googlemock/make CXXFLAGS=-fPIC gmock.a && \
   $(MAKE) -C googletest/make CXXFLAGS=-fPIC gtest.a

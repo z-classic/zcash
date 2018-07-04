@@ -82,7 +82,8 @@ struct Params {
     int SubsidySlowStartShift() const { return nSubsidySlowStartInterval / 2; }
     int nSubsidyHalvingInterval;
     int GetLastFoundersRewardBlockHeight() const {
-        return nSubsidyHalvingInterval + SubsidySlowStartShift() - 1;
+        //return nSubsidyHalvingInterval + SubsidySlowStartShift() - 1;
+        return 0; // Bugfix #14: getblocksubsidy RPC command is incorrect
     }
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;

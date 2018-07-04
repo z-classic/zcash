@@ -150,7 +150,7 @@ function lock() {
 
 function exit_locked_error {
     echo "Only one instance of fetch-params.sh can be run at a time." >&2
-    exit 1
+    #exit 1
 }
 
 function main() {

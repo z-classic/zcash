@@ -37,19 +37,19 @@ This Code of Conduct applies both within project spaces and in public spaces
 when an individual is representing the project or its community.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting a project maintainer (see below). All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. Maintainers are
+reported by contacting a project maintainer (see below).
+All complaints will be reviewed and investigated and will result in a response
+that is deemed necessary and appropriate to the circumstances. Maintainers are
 obligated to maintain confidentiality with regard to the reporter of an
 incident.
 
-You may send reports to [our Conduct email](mailto:conduct@z.cash).
+You may send reports to [our Conduct email](mailto:zclassic.org+CONDUCT@gmail.com).
 
 If you wish to contact specific maintainers directly, the following have made
 themselves available for conduct issues:
 
-- Daira Hopwood (daira at z.cash)
-- Sean Bowe (sean at z.cash)
+- nimbosa (nimbosa at zclassic-ce.org)
+- vic (vic at zclassic-ce.org)
 
 
 This Code of Conduct is adapted from the [Contributor Covenant][homepage],

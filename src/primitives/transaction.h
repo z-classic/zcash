@@ -262,8 +262,13 @@ public:
             const uint256& rt,
             std::array<libzcash::JSInput, ZC_NUM_JS_INPUTS>& inputs,
             std::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
+            #ifdef __LP64__ // required to build on MacOS due to size_t ambiguity errors
+            std::array<uint64_t, ZC_NUM_JS_INPUTS>& inputMap,
+            std::array<uint64_t, ZC_NUM_JS_OUTPUTS>& outputMap,
+            #else
             std::array<size_t, ZC_NUM_JS_INPUTS>& inputMap,
             std::array<size_t, ZC_NUM_JS_OUTPUTS>& outputMap,
+            #endif
             CAmount vpub_old,
             CAmount vpub_new,
             bool computeProof = true, // Set to false in some tests

@@ -1,19 +1,19 @@
 ---
-name: "bitcoin-win-signer"
+name: "zclassic-win-signer"
 suites:
-- "trusty"
+- "xenial"
 architectures:
 - "amd64"
 packages:
 - "libssl-dev"
 - "autoconf"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin-detached-sigs.git"
+- "url": "https://github.com/ZclassicDev/gitian.sigs.git"
   "dir": "signature"
 files:
 - "osslsigncode-1.7.1.tar.gz"
 - "osslsigncode-Backports-to-1.7.1.patch"
-- "bitcoin-win-unsigned.tar.gz"
+- "zclassic-win-unsigned.tar.gz"
 script: |
   BUILD_DIR=`pwd`
   SIGDIR=${BUILD_DIR}/signature/win

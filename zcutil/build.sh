@@ -55,19 +55,19 @@ $0 --help
   Show this help message and exit.
 
 $0 [ --enable-lcov || --disable-tests ] [ --disable-mining ] [ --enable-proton ] [ --disable-libs ] [ MAKEARGS... ]
-  Build Zcash and most of its transitive dependencies from
-  source. MAKEARGS are applied to both dependencies and Zcash itself.
+  Build zclassic and most of its transitive dependencies from
+  source. MAKEARGS are applied to both dependencies and zclassic itself.
 
-  If --enable-lcov is passed, Zcash is configured to add coverage
+  If --enable-lcov is passed, zclassic is configured to add coverage
   instrumentation, thus enabling "make cov" to work.
-  If --disable-tests is passed instead, the Zcash tests are not built.
+  If --disable-tests is passed instead, the zclassic tests are not built.
 
-  If --disable-mining is passed, Zcash is configured to not build any mining
+  If --disable-mining is passed, zclassic is configured to not build any mining
   code. It must be passed after the test arguments, if present.
 
-  If --enable-proton is passed, Zcash is configured to build the Apache Qpid Proton
-  library required for AMQP support. This library is not built by default.
-  It must be passed after the test/mining arguments, if present.
+ If --enable-proton is passed, zclassic is configured to build the Apache Qpid
+Proton library required for AMQP support. This library is not built by default.
+It must be passed after the test/mining arguments, if present.
 EOF
     exit 0
 fi
