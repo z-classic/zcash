@@ -141,7 +141,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-        //vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.zclassic.org")); // zclassic
+      //vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "dnsseed.zclassic-ce.org")); // Zclassic Community
         vSeeds.push_back(CDNSSeedData("zclassic.org", "na1.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic.org", "na2.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic.org", "na3.zclassic.org")); // zclassic
@@ -151,6 +152,10 @@ public:
         vSeeds.push_back(CDNSSeedData("zclassic.org", "as1.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic.org", "as2.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic.org", "as3.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "na.zclassic-ce.org")); // Community
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "eu.zclassic-ce.org")); // Community
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "as.zclassic-ce.org")); // Community
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "sa.zclassic-ce.org")); // Community
         
         vSeeds.push_back(CDNSSeedData("chains.run", "seed.zcl.chains.run")); //rizkiwicaksono/bitcoin-seeder
 
@@ -325,6 +330,8 @@ public:
         vSeeds.clear();
 
         vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.testnet.zclassic.org")); // Zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "dnsseed.testnet.zclassic-ce.org")); // Zclassic Community
+        vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "eu.testnet.zclassic-ce.org")); // Zclassic Community
 
         // guarantees the first 2 characters, when base58 encoded, are "tm"
         base58Prefixes[PUBKEY_ADDRESS]     = {0x1D,0x25};
