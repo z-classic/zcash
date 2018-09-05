@@ -11,6 +11,7 @@ from test_framework.util import assert_equal, initialize_chain_clean, \
 
 import sys
 import time
+
 from decimal import Decimal
 
 class WalletShieldCoinbaseTest (BitcoinTestFramework):
@@ -55,7 +56,8 @@ class WalletShieldCoinbaseTest (BitcoinTestFramework):
         print('...returned status: {}'.format(status))
         assert_equal(in_status, status)
         if errormsg is not None:
-            assert(in_errormsg is not None)
+            if in_errormsg=None:
+                raise AssertionError()
             assert_equal(in_errormsg in errormsg, True)
             print('...returned error: {}'.format(errormsg))
         return txid
