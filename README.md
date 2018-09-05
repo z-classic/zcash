@@ -143,8 +143,8 @@ Install
 Security Warnings
 -----------------
 
-See important security warnings on the
-[Security Information page](https://z.cash/support/security/).
+See important security warnings in
+[doc/security-warnings.md](doc/security-warnings.md).
 
 Zclassic and Zcash are **unfinished** and **highly experimental**. Use at your own risk.
 
