@@ -300,6 +300,8 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
             mapTx.erase(hash);
             nTransactionsUpdated++;
             minerPolicyEstimator->removeTx(hash);
+            removeAddressIndex(hash);
+            removeSpentIndex(hash);
         }
     }
 }
