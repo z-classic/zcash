@@ -987,4 +987,3 @@ UniValue getspentinfo(const UniValue& params, bool fHelp)
 
     return obj;
 }
-
