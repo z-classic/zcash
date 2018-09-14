@@ -5,8 +5,13 @@
 
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from time import *
+from test_framework.authproxy import JSONRPCException
+from test_framework.util import assert_equal, assert_greater_than, \
+    initialize_chain_clean, start_nodes, start_node, connect_nodes_bi, \
+    stop_nodes, sync_blocks, sync_mempools, wait_bitcoinds
+
+import time
+from decimal import Decimal
 
 class WalletTest (BitcoinTestFramework):
 
@@ -112,7 +117,7 @@ class WalletTest (BitcoinTestFramework):
         # Send 10 BTC normal
         address = self.nodes[0].getnewaddress("")
         self.nodes[2].settxfee(Decimal('0.001'))
-        txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
+        self.nodes[2].sendtoaddress(address, 10, "", "", False)
         self.sync_all()
         self.nodes[2].generate(1)
         self.sync_all()
@@ -122,7 +127,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*"), Decimal('10.00000000'))
 
         # Send 10 BTC with subtract fee from amount
-        txid = self.nodes[2].sendtoaddress(address, 10, "", "", True)
+        self.nodes[2].sendtoaddress(address, 10, "", "", True)
         self.sync_all()
         self.nodes[2].generate(1)
         self.sync_all()
@@ -132,7 +137,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*"), Decimal('19.99900000'))
 
         # Sendmany 10 BTC
-        txid = self.nodes[2].sendmany("", {address: 10}, 0, "", [])
+        self.nodes[2].sendmany("", {address: 10}, 0, "", [])
         self.sync_all()
         self.nodes[2].generate(1)
         self.sync_all()
@@ -142,7 +147,7 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(self.nodes[0].getbalance("*"), Decimal('29.99900000'))
 
         # Sendmany 10 BTC with subtract fee from amount
-        txid = self.nodes[2].sendmany("", {address: 10}, 0, "", [address])
+        self.nodes[2].sendmany("", {address: 10}, 0, "", [address])
         self.sync_all()
         self.nodes[2].generate(1)
         self.sync_all()
@@ -183,7 +188,7 @@ class WalletTest (BitcoinTestFramework):
         signedRawTx = self.nodes[1].signrawtransaction(rawTx)
         decRawTx = self.nodes[1].decoderawtransaction(signedRawTx['hex'])
         zeroValueTxid= decRawTx['txid']
-        sendResp = self.nodes[1].sendrawtransaction(signedRawTx['hex'])
+        self.nodes[1].sendrawtransaction(signedRawTx['hex'])
 
         self.sync_all()
         self.nodes[1].generate(1) #mine a block
@@ -250,7 +255,7 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
 
         mybalance = self.nodes[2].z_getbalance(mytaddr)
-        assert_equal(self.nodes[2].z_getbalance(mytaddr), Decimal('10.0'));
+        assert_equal(mybalance, Decimal('10.0'));
 
         mytxdetails = self.nodes[2].gettransaction(mytxid)
         myvjoinsplits = mytxdetails["vjoinsplit"]
@@ -266,6 +271,16 @@ class WalletTest (BitcoinTestFramework):
         for i in xrange(0,num_t_recipients):
             newtaddr = self.nodes[2].getnewaddress()
             recipients.append({"address":newtaddr, "amount":amount_per_recipient})
+
+        # Issue #2759 Workaround START
+        # HTTP connection to node 0 may fall into a state, during the few minutes it takes to process
+        # loop above to create new addresses, that when z_sendmany is called with a large amount of
+        # rpc data in recipients, the connection fails with a 'broken pipe' error.  Making a RPC call
+        # to node 0 before calling z_sendmany appears to fix this issue, perhaps putting the HTTP
+        # connection into a good state to handle a large amount of data in recipients.
+        self.nodes[0].getinfo()
+        # Issue #2759 Workaround END
+
         try:
             self.nodes[0].z_sendmany(myzaddr, recipients)
         except JSONRPCException,e:
@@ -283,6 +298,11 @@ class WalletTest (BitcoinTestFramework):
         for i in xrange(0,num_z_recipients):
             newzaddr = self.nodes[2].z_getnewaddress()
             recipients.append({"address":newzaddr, "amount":amount_per_recipient})
+
+        # Issue #2759 Workaround START
+        self.nodes[0].getinfo()
+        # Issue #2759 Workaround END
+
         try:
             self.nodes[0].z_sendmany(myzaddr, recipients)
         except JSONRPCException,e:
@@ -318,7 +338,7 @@ class WalletTest (BitcoinTestFramework):
         for x in xrange(1, timeout):
             results = self.nodes[2].z_getoperationresult(opids)
             if len(results)==0:
-                sleep(1)
+                time.sleep(1)
             else:
                 status = results[0]["status"]
                 mytxid = results[0]["result"]["txid"]
@@ -375,7 +395,7 @@ class WalletTest (BitcoinTestFramework):
         for x in xrange(1, timeout):
             results = self.nodes[2].z_getoperationresult(opids)
             if len(results)==0:
-                sleep(1)
+                time.sleep(1)
             else:
                 status = results[0]["status"]
                 break

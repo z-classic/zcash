@@ -1,8 +1,16 @@
-# Zclassic
+Zclassic 1.0.14
+===============
+
+NOTICE, the default ports have changed!
+* **P2P Port -** 8033  
+* **RPC Port -** 8023
+
 
 What is Zclassic?
-----------------
-Zclassic is a cryptocurrency with a focus on privacy. It uses the same initial ceremony parameters generated for [Zcash](https://github.com/zcash/zcash), as well as ZK-SNARKs for transaction shielding. The major change - there is no 20% [founders' fee](https://blog.z.cash/funding/) taken for mining each block.
+-----------------
+Zclassic is financial freedom.
+
+A cryptocurrency with a focus on privacy, Zclassic uses the same initial ceremony parameters generated for [Zcash](https://github.com/zcash/zcash), as well as ZK-SNARKs for transaction shielding. The major change - there is no 20% [founders' fee](https://blog.z.cash/funding/) taken for mining each block.
 
 More technical details are available
 in the [Zcash Protocol Specification](https://github.com/zcash/zips/raw/master/protocol/protocol.pdf).
@@ -13,9 +21,6 @@ connection, the synchronization process could take a day or more once the
 blockchain has reached a significant size.
 
 Two main files of interest in this repo are `zcashd` and `zcash-cli`, which should be renamed to `zcld` and `zcl-cli` for use in the full-node wallet. The project needs to be built (per the instructions) in order to generate them.
-
-**P2P Port -** 8033  
-**RPC Port -** 8023
 
 **Documentation is at the [Zclassic wiki](https://github.com/z-classic/zclassic/wiki)**
 

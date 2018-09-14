@@ -77,7 +77,8 @@ public:
             const boost::array<libzcash::JSOutput, ZC_NUM_JS_OUTPUTS>& outputs,
             CAmount vpub_old,
             CAmount vpub_new,
-            bool computeProof = true // Set to false in some tests
+            bool computeProof = true, // Set to false in some tests
+            uint256 *esk = nullptr // payment disclosure
     );
 
     static JSDescription Randomized(
@@ -96,6 +97,7 @@ public:
             CAmount vpub_old,
             CAmount vpub_new,
             bool computeProof = true, // Set to false in some tests
+            uint256 *esk = nullptr, // payment disclosure
             std::function<int(int)> gen = GetRandInt
     );
 
