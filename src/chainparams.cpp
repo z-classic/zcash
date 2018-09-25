@@ -49,7 +49,7 @@ public:
         consensus.nPowMaxAdjustDown = 32; // 32% adjustment down
         consensus.nPowMaxAdjustUp = 16; // 16% adjustment up
         consensus.nPowTargetSpacing = 2.5 * 60;
-        consensus.fPowAllowMinDifficultyBlocks = false;
+//      consensus.fPowAllowMinDifficultyBlocks = false;   // fixes regression https://github.com/zcash/zcash/issues/1380
         /**
          * The message start string should be awesome! ⓩ❤
          */
@@ -225,7 +225,7 @@ public:
         consensus.nMajorityWindow = 400;
         consensus.powLimit = uint256S("07ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         assert(maxUint/UintToArith256(consensus.powLimit) >= consensus.nPowAveragingWindow);
-        consensus.fPowAllowMinDifficultyBlocks = true;
+//      consensus.fPowAllowMinDifficultyBlocks = true;    // fixes regression https://github.com/zcash/zcash/issues/1380
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0x1a;
         pchMessageStart[2] = 0xf9;
