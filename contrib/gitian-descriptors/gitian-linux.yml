@@ -25,7 +25,7 @@ packages:
 - "wget"
 - "zlib1g-dev"
 remotes:
-- "url": "https://github.com/ZclassicDev/zclassic.git"
+- "url": "https://github.com/z-classic/zclassic.git"
   "dir": "zclassic"
 files: []
 script: |

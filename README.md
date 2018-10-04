@@ -1,15 +1,15 @@
 Zclassic 1.1.1
 ===============
-[![Twitter Follow](https://img.shields.io/twitter/follow/ZclassicDev.svg?style=social)](https://twitter.com/ZclassicDev)
+[![Twitter Follow](https://img.shields.io/twitter/follow/z-classic.svg?style=social)](https://twitter.com/ZclassicDev)
 [![Tweet](https://img.shields.io/twitter/url/https/github.com/ZclassicDev/ZclassicDev.github.io/README.md.svg?style=social)](https://twitter.com/intent/tweet?text=Check%20out%20Zclassic%20community's%20continuity%20plan%20-%20open%20to%20your%20feedback%20/%20suggestions:%20%F0%9F%A4%97%20%9C%A8%20https://github.com/ZclassicDev/ZclassicDev.github.io/README.md)
-[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/45NNrMJ) [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg?style=flat)](https://github.com/ZclassicDev/zclassic/releases)<br/>
+[![Discord Chat](https://img.shields.io/discord/308323056592486420.svg)](https://discord.gg/45NNrMJ) [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg?style=flat)](https://github.com/z-classic/zclassic/releases)<br/>
 OverWinter Upgrade with Equihash Parameters Modified and Initial Support for Sapling Upgrade Tests
 
 NOTICE, the default ports have changed!
 > MainNet: P2P port =  **8033** and RPC port =  **8023**. <br/>
 > TestNet: P2P port = **18033** and RPC port = **18023**.
-* Latest Windows and Linux binaries are available here: https://github.com/ZclassicDev/zclassic/releases
-* GUI / Swing Wallet UI is here: https://github.com/ZclassicDev/zclassic-full-node-wallet/releases <br/>
+* Latest Windows and Linux binaries are available here: https://github.com/z-classic/zclassic/releases
+* GUI / Swing Wallet UI is here: https://github.com/z-classic/zclassic-full-node-wallet/releases <br/>
 
 What is Zclassic?
 -----------------
@@ -53,9 +53,9 @@ https://github.com/z-classic/zclassic/wiki/Getting-Started
 ### Need help? Want to participate in development?
 * Documentation is at the **[Zclassic wiki](https://github.com/z-classic/zclassic/wiki)**.
 * View unsolved problems on the **[issue tracker](https://github.com/z-classic/zclassic/issues)**
-and [request improvement **here**](https://github.com/ZclassicDev/zclassic/issues).
+and [request improvement **here**](https://github.com/z-classic/zclassic/issues).
 * Code review is welcome! You may also send us a
-[pull request](https://github.com/ZclassicDev/zclassic/pulls)
+[pull request](https://github.com/z-classic/zclassic/pulls)
 if you want to add something here.
 
 Participation in the Zclassic project is subject to a [Code of Conduct](code_of_conduct.md). This is based on the original Zcash Code of Conduct.

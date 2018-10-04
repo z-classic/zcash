@@ -6,8 +6,8 @@ Overwinter network upgrade
 
 The activation height for the Overwinter network upgrade on mainnet is included
 in this release. Upgrade of algorithm parameters to Equihash<144,5> will
-activate on mainnet on top of OverWinter at height 375748, which is expected to
-be mined around the 29th of August 2018. Please upgrade to this release, or any
+activate on mainnet on top of OverWinter at height 414547, which is expected to
+be mined around the 6th of November 2018. Please upgrade to this release, or any
 subsequent release, in order to follow the mandatory Overwinter network upgrade.
 
 

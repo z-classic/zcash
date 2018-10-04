@@ -1,2 +1,2 @@
-DEBIAN/manpages/ZCLi.1
-DEBIAN/manpages/ZCLd.1
+DEBIAN/manpages/zcl-cli.1
+DEBIAN/manpages/zcld.1

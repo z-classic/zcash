@@ -1,5 +1,5 @@
 ---
-name: "zclassic-win-1.0.14"
+name: "zclassic-win-1.1.1"
 enable_cache: true
 suites:
 - "xenial"
@@ -21,7 +21,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/ZclassicDev/zclassic.git"
+- "url": "https://github.com/z-classic/zclassic.git"
   "dir": "zclassic"
 files: []
 script: |
