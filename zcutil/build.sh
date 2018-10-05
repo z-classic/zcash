@@ -41,7 +41,7 @@ if [[ -z "${CXX-}" ]]; then
     CXX=g++
 fi
 
-# Allow users to set arbitary compile flags. Most users will not need this.
+# Allow users to set arbitrary compile flags. Most users will not need this.
 if [[ -z "${CONFIGURE_FLAGS-}" ]]; then
     CONFIGURE_FLAGS=""
 fi
@@ -115,5 +115,5 @@ ld -v
 
 HOST="$HOST" BUILD="$BUILD" NO_PROTON="$PROTON_ARG" "$MAKE" "$@" -C ./depends/ V=1
 ./autogen.sh
-CC="$CC" CXX="$CXX" ./configure --prefix="${PREFIX}" --host="$HOST" --build="$BUILD" "$HARDENING_ARG" "$LCOV_ARG" "$TEST_ARG" "$MINING_ARG" "$PROTON_ARG" $CONFIGURE_FLAGS --enable-werror CXXFLAGS='-g'
+CONFIG_SITE="$PWD/depends/$HOST/share/config.site" ./configure "$HARDENING_ARG" "$LCOV_ARG" "$TEST_ARG" "$MINING_ARG" "$PROTON_ARG" $CONFIGURE_FLAGS CXXFLAGS='-g'
 "$MAKE" "$@" V=1

@@ -417,6 +417,30 @@ int printInitMessage()
     return 2;
 }
 
+#ifdef WIN32
+#define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
+
+bool enableVTMode()
+{
+    // Set output mode to handle virtual terminal sequences
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) {
+        return false;
+    }
+
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode)) {
+        return false;
+    }
+
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hOut, dwMode)) {
+        return false;
+    }
+    return true;
+}
+#endif
+
 void ThreadShowMetricsScreen()
 {
     // Make this thread recognisable as the metrics screen thread
@@ -428,6 +452,10 @@ void ThreadShowMetricsScreen()
     int64_t nRefresh = GetArg("-metricsrefreshtime", isTTY ? 1 : 600);
 
     if (isScreen) {
+#ifdef WIN32
+        enableVTMode();
+#endif
+
         // Clear screen
         std::cout << "\e[2J";
 
@@ -451,18 +479,18 @@ void ThreadShowMetricsScreen()
 
         // Get current window size
         if (isTTY) {
-        #ifdef WIN32
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-        cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
-        #else
-	  cols = 80;
+#ifdef WIN32
+            CONSOLE_SCREEN_BUFFER_INFO csbi;
+            if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi) != 0) {
+                cols = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+            }
+#else
             struct winsize w;
             w.ws_col = 0;
             if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1 && w.ws_col != 0) {
                 cols = w.ws_col;
             }
-        #endif
+#endif
         }
 
         if (isScreen) {
@@ -487,7 +515,13 @@ void ThreadShowMetricsScreen()
 
         if (isScreen) {
             // Explain how to exit
-            std::cout << "[" << _("Press Ctrl+C to exit") << "] [" << _("Set 'showmetrics=0' to hide") << "]" << std::endl;
+            std::cout << "[";
+#ifdef WIN32
+            std::cout << _("'zcl-cli.exe stop' to exit");
+#else
+            std::cout << _("Press Ctrl+C to exit");
+#endif
+            std::cout << "] [" << _("Set 'showmetrics=0' to hide") << "]" << std::endl;
         } else {
             // Print delineator
             std::cout << "----------------------------------------" << std::endl;

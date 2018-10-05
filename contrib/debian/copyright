@@ -6,7 +6,7 @@ Source: https://github.com/z-classic/zclassic
 Files: *
 Copyright: 2016-2018 Zclassic developers
  2016-2018, The Zcash developers
- 2009-2017, Bitcoin Core developers
+ 2009-2018, The Bitcoin Core developers
 License: Expat
 Comment: The Bitcoin Core developers encompasses the current developers listed on bitcoin.org,
  as well as the numerous contributors to the project.
