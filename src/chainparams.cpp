@@ -146,7 +146,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
 
-      //vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.zclassic.org")); // zclassic
+        vSeeds.push_back(CDNSSeedData("zclassic.org", "dnsseed.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "dnsseed.zclassic-ce.org")); // Zclassic Community
         vSeeds.push_back(CDNSSeedData("zclassic.org", "na1.zclassic.org")); // zclassic
         vSeeds.push_back(CDNSSeedData("zclassic.org", "na2.zclassic.org")); // zclassic
@@ -161,7 +161,7 @@ public:
         vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "eu.zclassic-ce.org")); // Community
         vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "as.zclassic-ce.org")); // Community
         vSeeds.push_back(CDNSSeedData("zclassic-ce.org", "sa.zclassic-ce.org")); // Community
-        
+
         vSeeds.push_back(CDNSSeedData("chains.run", "seed.zcl.chains.run")); //rizkiwicaksono/bitcoin-seeder
 
         vSeeds.push_back(CDNSSeedData("indieonion.org", "dnsseed.indieonion.org")); // @IndieOnion
@@ -186,7 +186,7 @@ public:
         bech32HRPs[SAPLING_PAYMENT_ADDRESS]      = "zs";
         bech32HRPs[SAPLING_FULL_VIEWING_KEY]     = "zviews";
         bech32HRPs[SAPLING_INCOMING_VIEWING_KEY] = "zivks";
-        bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-main";
+  //    bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-main";
         bech32HRPs[SAPLING_EXTENDED_SPEND_KEY]   = "secret-extended-key-main";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
@@ -362,7 +362,7 @@ public:
         bech32HRPs[SAPLING_PAYMENT_ADDRESS]      = "ztestsapling";
         bech32HRPs[SAPLING_FULL_VIEWING_KEY]     = "zviewtestsapling";
         bech32HRPs[SAPLING_INCOMING_VIEWING_KEY] = "zivktestsapling";
-        bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-test";
+//      bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-test";
         bech32HRPs[SAPLING_EXTENDED_SPEND_KEY]   = "secret-extended-key-test";
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
@@ -498,7 +498,7 @@ public:
         bech32HRPs[SAPLING_PAYMENT_ADDRESS]      = "zregtestsapling";
         bech32HRPs[SAPLING_FULL_VIEWING_KEY]     = "zviewregtestsapling";
         bech32HRPs[SAPLING_INCOMING_VIEWING_KEY] = "zivkregtestsapling";
-        bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-regtest";
+//      bech32HRPs[SAPLING_SPENDING_KEY]         = "secret-spending-key-regtest";
         bech32HRPs[SAPLING_EXTENDED_SPEND_KEY]   = "secret-extended-key-regtest";
 
         // Founders reward script expects a vector of 2-of-3 multisig addresses
