@@ -77,6 +77,7 @@ public:
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
     /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
+//  int64_t MaxTipAge() const { return nMaxTipAge; }               // moved, see: https://github.com/zcash/zcash/pull/3263
     int64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     unsigned int EquihashN(int nHeight = 0) const;
     unsigned int EquihashK(int nHeight = 0) const;
@@ -107,6 +108,7 @@ protected:
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort = 0;
+//  long nMaxTipAge = 0;                                           // moved, see: https://github.com/zcash/zcash/pull/3263
     uint64_t nPruneAfterHeight = 0;
     unsigned int nEquihashN = 0;
     unsigned int nEquihashK = 0;
