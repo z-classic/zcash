@@ -61,6 +61,9 @@ if you want to add something here.
 
 Participation in the Zclassic project is subject to a [Code of Conduct](code_of_conduct.md).
 
+Our **[Policy on Responsible Disclosure of Security Vulnerability](doc/DISCLOSURE.md)** in Zclassic Software and Tools is explained [here](doc/DISCLOSURE.md).
+
+
 Build and Installation
 ----------------------
 
