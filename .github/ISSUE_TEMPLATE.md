@@ -2,11 +2,11 @@
 
 Zclassic Wallet Daemon and CLI Issue Template
 
-This issue tracker is only for technical issues related to zcashd.
+This issue tracker is only for technical issues related to ZCLd.
 
-General Zcash questions and/or support requests and are best directed to the [Zcash Forums](https://forum.z.cash) or [Community Rocket.Chat](https://chat.zcashcommunity.com).
+General Zclassic questions and/or support requests are best directed to the [Community Discord](https://discord.gg/45NNrMJ) Server.
 
-For reporting security vulnerabilities or for sensitive discussions with our security team, please contact [security@z.cash](mailto:security@z.cash). You can use the [GPG key](https://z.cash/gpg-pubkeys/security.asc) (fingerprint: `AF85 0445 546C 18B7 86F9  2C62 88FB 8B86 D8B5 A68C`) to send an encrypted message. The key and fingerprint are duplicated on our [Public Keys page](https://z.cash/support/pubkeys.html).
+Our __[Policy on Responsible Disclosure of Security Vulnerability](../doc/DISCLOSURE.md)__ in Zclassic Software and Tools is detailed [here](../doc/DISCLOSURE.md). Please contact __[team[at]zclassic-ce.org](mailto:team@zclassic-ce.org)__ to report, and for sensitive discussions you can use our [GPG key](https://keybase.io/zclassiccoin/pgp_keys.asc) (fingerprint: `31F1 9DE3 015A 41C8 8B5C  7F82 3092 16F3 5FB5 80EA`) to send an encrypted message, or simply use [Keybase](https://keybase.io/encrypt#zclassiccoin "Keybase encrypted message to ZclassicCoin"). The key and fingerprint are duplicated on the [MIT Public Keys page](https://pgp.mit.edu/pks/lookup?search=0x5FB580EA&op=vindex&fingerprint=on "on MIT: ID 0x5FB580EA").
 
 ### Describe the issue
 Please provide a general summary of the issue you're experiencing
@@ -18,13 +18,15 @@ Please provide a general summary of the issue you're experiencing
 3. 
 
 ### Expected behaviour
-Tell us what should happen
+> Tell us what should happen
 
 ### Actual behaviour + errors
-Tell us what happens instead including any noticable error output (any messages displayed on-screen when e.g. a crash occurred)
+> Tell us what happens instead including any noticable error output (any messages displayed on-screen when e.g. a crash occurred)
 
 ### The version of Zclassic / Zcash you were using:
-Run `zcashd --version` to find out
+Run `zcashd --version` (old versions) or `zcld --version` to find out.
+
+These will be `zcashd.exe` or `zcld.exe` on Windows builds.
 
 ### Machine specs:
 - OS name + version:
