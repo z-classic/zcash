@@ -1,7 +1,7 @@
 Zclassic REPOSITORY HAS MOVED
 ===============
 
-As of November 29, 2020 this repository exists for archival purposes only.  Please use the current and active repository at
+As of July 29, 2020 this repository exists for archival purposes only.  Please use the current and active repository at
 
 https://github.com/zcl-network/zclassic
 
